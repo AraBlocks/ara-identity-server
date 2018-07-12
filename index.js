@@ -55,6 +55,7 @@ async function configure(opts, program) {
 }
 
 async function start(argv) {
+
   const keys = {
     discoveryKey: null,
     remote: null,
@@ -63,7 +64,11 @@ async function start(argv) {
   }
 
   if (null === conf.key || 'string' !== typeof conf.key) {
-    throw new TypeError('Expecting network key to be a string.')
+    throw new TypeError('Expecting manager network key to be a string.')
+  }
+
+  if (null === conf.archiverKey || 'string' !== typeof conf.archiverKey) {
+    throw new TypeError('Expecting archiver network key to be a string.')
   }
 
   try {
@@ -92,7 +97,7 @@ async function start(argv) {
     if (req.method == 'OPTIONS') {
       res.status(200).end();
     } else {
-      next();
+      next()
     }
   });
 
@@ -101,7 +106,6 @@ async function start(argv) {
   app.use(function(req, res, next) {
     res.status(404).send("Path Not Found").end()
   })
-
 
   server = http.createServer(app)
   server.listen(argv.port, onlisten)
@@ -118,8 +122,8 @@ async function start(argv) {
       if (!req.query.passphrase ) {
         res.status(422).send("Missing Passphrase").end()
       }
-      if (!req.headers['X-Passphrase']) {
-
+      if (req.query.discoveryKey !== conf.discoveryKey.toString('hex')) {
+        res.status(401).send("Unauthorized").end()
       }
       else {
         const password = req.query.passphrase
@@ -127,7 +131,11 @@ async function start(argv) {
         const doc = await secrets.load({key: conf.archiverKey})
         const { keystore } = (doc.public || doc.secret)
         await aid.archive(identifier,{key: conf.archiverKey, keystore})
-        res.send(identifier.did)
+        const response = {
+          did: identifier.did
+        }
+        res.set('content-type', 'application/json')
+        res.send(response)
       }
     } catch (err){
       debug(err)
