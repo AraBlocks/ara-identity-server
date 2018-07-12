@@ -1,0 +1,42 @@
+{
+  "name": "ara-network-node-identity-manager",
+  "version": "1.0.0",
+  "description": "A cryptographic key management system which exposes a http api to create ARA identities",
+  "main": "index.js",
+  "scripts": {
+    "test": "npm test"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/AraBlocks/ara-network-node-identity-manager.git"
+  },
+  "keywords": [
+    "ara",
+    "network",
+    "node",
+    "identity",
+    "manager",
+    "ckms"
+  ],
+  "devDependencies": {
+    "ava": "^0.25.0",
+    "eslint": "^4.19.1",
+    "eslint-config-ara": "github:arablocks/eslint-config-ara",
+    "eslint-plugin-import": "^2.12.0"
+  },
+  "dependencies": {
+    "ara-console": "github:arablocks/ara-console",
+    "ara-context": "github:arablocks/ara-context",
+    "ara-crypto": "github:arablocks/ara-crypto",
+    "ara-identity": "github:arablocks/ara-identity",
+    "ara-network": "github:arablocks/ara-network",
+    "ara-runtime-configuration": "github:arablocks/ara-runtime-configuration",
+    "extend": "^3.0.1"
+  },
+  "author": "Prashanth Balasubramani",
+  "license": "LGPL-3.0",
+  "bugs": {
+    "url": "https://github.com/AraBlocks/ara-network-node-identity-manager/issues"
+  },
+  "homepage": "https://github.com/AraBlocks/ara-network-node-identity-manager#readme"
+}
