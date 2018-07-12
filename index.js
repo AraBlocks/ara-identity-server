@@ -83,10 +83,27 @@ async function start(argv) {
   })
 
   app = express()
+
+  app.all('/*', function(req, res, next) {
+    // CORS headers
+    res.header('Access-Control-Allow-Methods', 'POST,OPTIONS');
+    // Set custom headers for CORS
+    res.header('Access-Control-Allow-Headers', 'Content-type,Accept,X-Access-Keys,X-Passphrase');
+    if (req.method == 'OPTIONS') {
+      res.status(200).end();
+    } else {
+      next();
+    }
+  });
+
+  app.all('/api/v1/create/', onidentifier)
+
+  app.use(function(req, res, next) {
+    res.status(404).send("Path Not Found").end()
+  })
+
+
   server = http.createServer(app)
-
-  app.all('/create', onidentifier)
-
   server.listen(argv.port, onlisten)
   server.once('error', (err) => {
     if (err && 'EADDRINUSE' === err.code) { server.listen(0, onlisten) }
@@ -96,7 +113,13 @@ async function start(argv) {
   async function onidentifier(req, res) {
     try{
       if (req.method != 'POST') {
-        res.status(404).send("Unauthorized Request").end()
+        res.status(400).send("Bad Request").end()
+      }
+      if (!req.query.passphrase ) {
+        res.status(422).send("Missing Passphrase").end()
+      }
+      if (!req.headers['X-Passphrase']) {
+
       }
       else {
         const password = req.query.passphrase
