@@ -22,6 +22,7 @@ const conf = {
 
 let server = null
 let app = null
+let remoteKeystore = null
 
 async function getInstance() {
   return server
@@ -63,6 +64,13 @@ async function start(argv) {
     network: null,
   }
 
+  const remoteKeys = {
+    discoveryKey: null,
+    remote: null,
+    client: null,
+    network: null,
+  }
+
   if (null === conf.key || 'string' !== typeof conf.key) {
     throw new TypeError('Expecting manager network key to be a string.')
   }
@@ -96,7 +104,8 @@ async function start(argv) {
     res.header('Access-Control-Allow-Headers', 'Content-type,Accept,X-Access-Keys,X-Passphrase');
     if (req.method == 'OPTIONS') {
       res.status(200).end();
-    } else {
+    }
+    else {
       next()
     }
   });
@@ -122,7 +131,12 @@ async function start(argv) {
       if (!req.query.passphrase ) {
         res.status(422).send("Missing Passphrase").end()
       }
-      if (req.query.discoveryKey !== conf.discoveryKey.toString('hex')) {
+      if (!req.query.keys ) {
+        res.status(422).send("Missing keystore").end()
+      }
+      const { keystore } = JSON.parse(req.query.keys)
+      Object.assign(remoteKeys, secrets.decrypt({keystore}, { key: conf.key }))
+      if (0 !== Buffer.compare(remoteKeys.discoveryKey, conf.discoveryKey)) {
         res.status(401).send("Unauthorized").end()
       }
       else {
