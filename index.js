@@ -109,6 +109,7 @@ async function start(argv) {
   return true
 
   async function onidentifier(req, res) {
+    let id = setTimeout(() => { res.status(408).send('Request Timed Out') }, kRequestTimeout)
     try{
       if (undefined === req.query.passphrase) {
         res.status(401).send("Missing Passphrase").end()
@@ -120,10 +121,12 @@ async function start(argv) {
         const { keystore } = (doc.public || doc.secret)
         await aid.archive(identifier,{key: conf.archiverKey, keystore})
         const response = {
+          mnemonic: identifier.mnemonic,
           ddo: identifier.ddo
         }
-        console.log(response)
+        res.setHeader('Content-Type', 'application/json')
         res.end(JSON.stringify(response))
+        res.on('finish', () => { clearTimeout(id) })
       }
     } catch (err){
       debug(err)
