@@ -1,4 +1,5 @@
 const debug = require('debug')('ara:network:node:identity-manager')
+const { createChannel } = require('ara-network/discovery/channel')
 const { createServer } = require('ara-network/discovery')
 const { info, warn, error } = require('ara-console')
 const secrets = require('ara-network/secrets')
@@ -14,6 +15,10 @@ const http = require('http')
 const kRequestTimeout = 5000
 
 const conf = {
+  // in milliseconds
+  'dns-announce-interval': 1000 * 60 * 2,
+  // in milliseconds
+  'dht-announce-interval': 1000 * 60 * 2,
   archiverKey: null,
   keystore: null,
   port: 8000,
@@ -21,8 +26,8 @@ const conf = {
 }
 
 let server = null
+let channel = null
 let app = null
-let remoteKeystore = null
 
 async function getInstance() {
   return server
@@ -64,13 +69,6 @@ async function start(argv) {
     network: null,
   }
 
-  const remoteKeys = {
-    discoveryKey: null,
-    remote: null,
-    client: null,
-    network: null,
-  }
-
   if (null === conf.key || 'string' !== typeof conf.key) {
     throw new TypeError('Expecting manager network key to be a string.')
   }
@@ -97,26 +95,13 @@ async function start(argv) {
 
   app = express()
 
-  app.all('/*', function(req, res, next) {
-    // CORS headers
-    res.header('Access-Control-Allow-Methods', 'POST,OPTIONS');
-    // Set custom headers for CORS
-    res.header('Access-Control-Allow-Headers', 'Content-type,Accept,X-Access-Keys,X-Passphrase');
-    if (req.method == 'OPTIONS') {
-      res.status(200).end();
-    }
-    else {
-      next()
-    }
-  });
-
-  app.all('/api/v1/create/', onidentifier)
-
-  app.use(function(req, res, next) {
-    res.status(404).send("Path Not Found").end()
-  })
+  app.post('/api/v1/create/', onidentifier)
 
   server = http.createServer(app)
+  channel = createChannel({
+    dht: { interval: conf['dht-announce-interval'] },
+    dns: { interval: conf['dns-announce-interval'] },
+  })
   server.listen(argv.port, onlisten)
   server.once('error', (err) => {
     if (err && 'EADDRINUSE' === err.code) { server.listen(0, onlisten) }
@@ -125,19 +110,8 @@ async function start(argv) {
 
   async function onidentifier(req, res) {
     try{
-      if (req.method != 'POST') {
-        res.status(400).send("Bad Request").end()
-      }
-      if (!req.query.passphrase ) {
-        res.status(422).send("Missing Passphrase").end()
-      }
-      if (!req.query.keys ) {
-        res.status(422).send("Missing keystore").end()
-      }
-      const { keystore } = JSON.parse(req.query.keys)
-      Object.assign(remoteKeys, secrets.decrypt({keystore}, { key: conf.key }))
-      if (0 !== Buffer.compare(remoteKeys.discoveryKey, conf.discoveryKey)) {
-        res.status(401).send("Unauthorized").end()
+      if (undefined === req.query.passphrase) {
+        res.status(401).send("Missing Passphrase").end()
       }
       else {
         const password = req.query.passphrase
@@ -146,10 +120,10 @@ async function start(argv) {
         const { keystore } = (doc.public || doc.secret)
         await aid.archive(identifier,{key: conf.archiverKey, keystore})
         const response = {
-          did: identifier.did
+          ddo: identifier.ddo
         }
-        res.set('content-type', 'application/json')
-        res.send(response)
+        console.log(response)
+        res.end(JSON.stringify(response))
       }
     } catch (err){
       debug(err)
@@ -165,6 +139,7 @@ async function start(argv) {
   function announce() {
     const { port } = server.address()
     info('identity-manager: Announcing %s on port %s', conf.discoveryKey.toString('hex'), port)
+    channel.join(conf.discoveryKey, port)
   }
 }
 
