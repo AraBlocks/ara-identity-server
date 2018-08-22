@@ -3,7 +3,7 @@ const { createChannel } = require('ara-network/discovery/channel')
 const { unpack, keyRing } = require('ara-network/keys')
 const { createServer } = require('ara-network/discovery')
 const { writeIdentity } = require('ara-identity/util')
-const { info, warn } = require('ara-console')
+const { info, warn, error } = require('ara-console')
 const ss = require('ara-secret-storage')
 const context = require('ara-context')()
 const inquirer = require('inquirer')
@@ -146,6 +146,8 @@ async function start(argv) {
       }
     } catch (err){
       debug(err)
+      res.status(401).send("Create request failed").end()
+      clearTimeout(timer)
     }
   }
 
@@ -173,7 +175,8 @@ async function start(argv) {
       }
     } catch (err){
       debug(err)
-      error(err.message)
+      res.status(401).send("Resolve request failed. Invalid DID").end()
+      clearTimeout(timer)
     }
   }
 
