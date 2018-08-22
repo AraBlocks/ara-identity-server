@@ -1,6 +1,6 @@
 const debug = require('debug')('ara:network:node:identity-manager')
 const { createChannel } = require('ara-network/discovery/channel')
-const { unpack, keyRing, derive } = require('ara-network/keys')
+const { unpack, keyRing } = require('ara-network/keys')
 const { createServer } = require('ara-network/discovery')
 const { writeIdentity } = require('ara-identity/util')
 const { info, warn } = require('ara-console')
@@ -196,6 +196,7 @@ async function stop() {
   }
 
   warn('identity-manager: Stopping the http server')
+  channel.destroy()
   server.close(onclose)
   return true
 
