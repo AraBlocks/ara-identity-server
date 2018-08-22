@@ -1,35 +1,34 @@
 const debug = require('debug')('ara:network:node:identity-manager')
-const { unpack, keyRing, derive } = require('ara-network/keys')
 const { createChannel } = require('ara-network/discovery/channel')
+const { unpack, keyRing, derive } = require('ara-network/keys')
 const { createServer } = require('ara-network/discovery')
-const { info, warn, error } = require('ara-console')
+const { writeIdentity } = require('ara-identity/util')
+const { info, warn } = require('ara-console')
 const ss = require('ara-secret-storage')
 const context = require('ara-context')()
+const inquirer = require('inquirer')
 const crypto = require('ara-crypto')
 const aid = require('ara-identity')
-const { readFile } = require('fs')
-const { writeIdentity } = require('ara-identity/util')
-const { DID } = require('did-uri')
 const { resolve } = require('path')
+const { readFile } = require('fs')
+const { DID } = require('did-uri')
 const express = require('express')
-const inquirer = require('inquirer')
 const extend = require('extend')
+const pkg = require('./package')
 const http = require('http')
 const rc = require('./rc')()
 const pify = require('pify')
-const pkg = require('./package')
+
 
 // in milliseconds
-const kRequestTimeout = 10000
+const kRequestTimeout = 5000
 
 const conf = {
-  // in milliseconds
-  'dns-announce-interval': 1000 * 60 * 2,
-  // in milliseconds
-  'dht-announce-interval': 1000 * 60 * 2,
-  keystore: null,
   port: 8000,
-  key: null
+  identity: null,
+  secret: null,
+  name: null,
+  keyring: null,
 }
 
 let server = null
@@ -123,22 +122,27 @@ async function start(argv) {
   return true
 
   async function oncreate(req, res) {
-    let id = setTimeout(() => { res.status(408).send('Request Timed Out') }, kRequestTimeout)
+    let timer = setTimeout(() => { res.status(408).send('Request Timed Out') }, kRequestTimeout)
     try{
       if (undefined === req.query.passphrase) {
         res.status(401).send("Missing Passphrase").end()
+        clearTimeout(timer)
       }
       else {
+        info('%s: Received create request', pkg.name)
         const password = req.query.passphrase
         const identifier = await aid.create({ context, password })
+        const id = `did:ara:${identifier.publicKey.toString('hex')}`
         await writeIdentity(identifier)
         const response = {
+          did: id,
           mnemonic: identifier.mnemonic,
           ddo: identifier.ddo
         }
+        info('%s: New Identity created successfully: %s', pkg.name, id)
         res.setHeader('Content-Type', 'application/json')
         res.end(JSON.stringify(response))
-        res.on('finish', () => { clearTimeout(id) })
+        res.on('finish', () => { clearTimeout(timer) })
       }
     } catch (err){
       debug(err)
@@ -146,26 +150,30 @@ async function start(argv) {
   }
 
   async function onresolve(req, res) {
-    let id = setTimeout(() => { res.status(408).send('Request Timed Out') }, kRequestTimeout)
+    let timer = setTimeout(() => { res.status(408).send('Request Timed Out') }, kRequestTimeout)
     try{
       if (undefined === req.query.did) {
         res.status(401).send("Missing DID").end()
+        clearTimeout(timer)
       }
       else {
         if (0 !== req.query.did.indexOf('did:ara:')) {
           req.query.did = `did:ara:${req.query.did}`
         }
+        info('%s: Resolve request received for: %s', pkg.name, req.query.did)
         const did = new DID(req.query.did)
         const publicKey = Buffer.from(did.identifier, 'hex')
         const hash = crypto.blake2b(publicKey).toString('hex')
         const path = resolve(rc.network.identity.root, hash, 'ddo.json')
         const ddo = JSON.parse(await pify(readFile)(path, 'utf8'))
+        info('%s: Resolve request completed successfully!!!!', pkg.name)
         res.setHeader('Content-Type', 'application/json')
         res.end(JSON.stringify(ddo))
-        res.on('finish', () => { clearTimeout(id) })
+        res.on('finish', () => { clearTimeout(timer) })
       }
     } catch (err){
       debug(err)
+      error(err.message)
     }
   }
 
