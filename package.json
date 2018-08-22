@@ -31,7 +31,11 @@
     "ara-identity": "github:arablocks/ara-identity",
     "ara-network": "github:arablocks/ara-network",
     "ara-runtime-configuration": "github:arablocks/ara-runtime-configuration",
-    "extend": "^3.0.1"
+    "ara-secret-storage": "github:arablocks/ara-secret-storage",
+    "did-uri": "^0.2.4",
+    "extend": "^3.0.1",
+    "inquirer": "^6.1.0",
+    "pify": "^3.0.0"
   },
   "author": "Prashanth Balasubramani",
   "license": "LGPL-3.0",
