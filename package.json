@@ -33,6 +33,7 @@
     "ara-runtime-configuration": "github:arablocks/ara-runtime-configuration",
     "ara-secret-storage": "github:arablocks/ara-secret-storage",
     "did-uri": "^0.2.4",
+    "express": "^4.16.3",
     "extend": "^3.0.1",
     "inquirer": "^6.1.0",
     "pify": "^3.0.0"
