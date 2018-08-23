@@ -108,7 +108,7 @@ async function start(argv) {
   app = express()
 
   app.post('/api/v1/create/', oncreate)
-  app.post('/api/v1/resolve/', onresolve)
+  app.get('/api/v1/resolve/', onresolve)
 
   server = http.createServer(app)
   channel = createChannel({
