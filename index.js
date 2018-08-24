@@ -1,23 +1,23 @@
-const debug = require('debug')('ara:network:node:identity-manager')
-const { createChannel } = require('ara-network/discovery/channel')
-const { unpack, keyRing } = require('ara-network/keys')
-const { createServer } = require('ara-network/discovery')
-const { writeIdentity } = require('ara-identity/util')
 const { info, warn, error } = require('ara-console')
-const ss = require('ara-secret-storage')
-const context = require('ara-context')()
-const inquirer = require('inquirer')
-const crypto = require('ara-crypto')
-const aid = require('ara-identity')
-const { resolve } = require('path')
+const { unpack, keyRing } = require('ara-network/keys')
+const { createChannel } = require('ara-network/discovery/channel')
+const { writeIdentity } = require('ara-identity/util')
+const { createServer } = require('ara-network/discovery')
 const { readFile } = require('fs')
+const { resolve } = require('path')
+const inquirer = require('inquirer')
+const context = require('ara-context')()
 const { DID } = require('did-uri')
 const express = require('express')
+const crypto = require('ara-crypto')
 const extend = require('extend')
-const pkg = require('./package')
-const http = require('http')
-const rc = require('./rc')()
+const debug = require('debug')('ara:network:node:identity-manager')
 const pify = require('pify')
+const http = require('http')
+const aid = require('ara-identity')
+const pkg = require('./package')
+const ss = require('ara-secret-storage')
+const rc = require('./rc')()
 
 
 // in milliseconds
@@ -83,9 +83,11 @@ async function start(argv) {
         'Passphrase:'
     }
   ])
+
   if (0 !== argv.identity.indexOf('did:ara:')) {
     argv.identity = `did:ara:${conf.identity}`
   }
+
   const did = new DID(argv.identity)
   const publicKey = Buffer.from(did.identifier, 'hex')
 
@@ -102,7 +104,6 @@ async function start(argv) {
   const unpacked = unpack({ buffer })
 
   const { discoveryKey } = unpacked
-
   info('%s: discovery key:', pkg.name, discoveryKey.toString('hex'))
 
   app = express()
@@ -119,6 +120,7 @@ async function start(argv) {
   server.once('error', (err) => {
     if (err && 'EADDRINUSE' === err.code) { server.listen(0, onlisten) }
   })
+
   return true
 
   async function oncreate(req, res) {
