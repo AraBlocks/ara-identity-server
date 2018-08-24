@@ -44,19 +44,23 @@ async function configure(opts, program) {
     const { argv } = program
       .option('identity', {
         alias: 'i',
-        describe: 'Ara Identity for the network node'
+        describe: 'Ara Identity for the network node.',
+        required: true,
       })
       .option('secret', {
         alias: 's',
-        describe: 'Shared secret key'
+        describe: 'Shared secret key',
+        required: true,
       })
       .option('name', {
         alias: 'n',
-        describe: 'Human readable network keys name.'
+        describe: 'Human readable network keys name.',
+        required: true,
       })
       .option('keyring', {
         alias: 'k',
-        describe: 'Path to ARA network keys'
+        describe: 'Path to ARA network keys.',
+        required: true,
       })
       .option('port', {
         alias: 'p',
