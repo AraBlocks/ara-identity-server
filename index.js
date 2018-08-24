@@ -105,6 +105,12 @@ async function start(argv) {
 
   const keyring = keyRing(argv.keyring, { secret: secretKey })
   const buffer = await keyring.get(argv.name)
+
+  if ( !buffer.length ) {
+    error(`No discoveryKey found from network key named: ${argv.name} and keyring: ${argv.keyring}.`)
+    error(`Please try a diffrent key name ('-n' option) or keyring ('-k' option).`)
+  }
+
   const unpacked = unpack({ buffer })
 
   const { discoveryKey } = unpacked
