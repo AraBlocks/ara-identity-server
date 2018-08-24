@@ -23,7 +23,7 @@ const rc = require('./rc')()
 // in milliseconds
 const kRequestTimeout = 5000
 
-const conf = {
+let conf = {
   port: 8000,
   identity: null,
   secret: null,
@@ -66,9 +66,9 @@ async function configure(opts, program) {
         alias: 'p',
         describe: 'Port for network node to listen on.'
       })
-  }
 
-  return extend(true, conf, opts)
+    if (argv.port) { conf.port = argv.port }
+  }
 }
 
 async function start(argv) {
@@ -120,7 +120,7 @@ async function start(argv) {
     dht: { interval: conf['dht-announce-interval'] },
     dns: { interval: conf['dns-announce-interval'] },
   })
-  server.listen(argv.port, onlisten)
+  server.listen(conf.port, onlisten)
   server.once('error', (err) => {
     if (err && 'EADDRINUSE' === err.code) { server.listen(0, onlisten) }
   })
