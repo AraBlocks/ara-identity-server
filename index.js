@@ -15,11 +15,11 @@ const { DID } = require('did-uri')
 const express = require('express')
 const extend = require('extend')
 const pkg = require('./package')
+const https = require('https')
+const path = require('path')
 const http = require('http')
 const rc = require('./rc')()
 const pify = require('pify')
-const https = require('https')
-const path = require('path')
 const fs = require('fs')
 
 
@@ -32,6 +32,8 @@ const conf = {
   secret: null,
   name: null,
   keyring: null,
+  sslKey: null,
+  sslCert: null
 }
 
 let server = null
@@ -39,8 +41,7 @@ let channel = null
 let app = null
 
 let certOptions = {
-  key: fs.readFileSync(path.resolve('/Users/prashanthbalasubramani/Desktop/server.key')),
-  cert: fs.readFileSync(path.resolve('/Users/prashanthbalasubramani/Desktop/server.crt'))
+
 }
 
 
@@ -70,6 +71,14 @@ async function configure(opts, program) {
       .option('port', {
         alias: 'p',
         describe: 'Port for network node to listen on.'
+      })
+      .option('sslKey', {
+        alias: '',
+        describe: 'Path to ssl key file for the server'
+      })
+      .option('sslCert', {
+        alias: '',
+        describe: 'Path to ssl certificate file for the server'
       })
   }
 
@@ -115,11 +124,16 @@ async function start(argv) {
   info('%s: discovery key:', pkg.name, discoveryKey.toString('hex'))
 
   app = express()
-  
+
   app.post('/api/v1/create/', oncreate)
   app.get('/api/v1/resolve/', onresolve)
 
-  server = https.createServer(certOptions, app)
+  if (conf.sslCert && conf.sslKey) {
+    server = https.createServer({key: conf.sslKey, cert: conf.sslCert}, app)
+  }
+  else {
+    server = http.createServer(app)
+  }
   channel = createChannel({
     dht: { interval: conf['dht-announce-interval'] },
     dns: { interval: conf['dns-announce-interval'] },
