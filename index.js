@@ -10,13 +10,13 @@ const inquirer = require('inquirer')
 const crypto = require('ara-crypto')
 const aid = require('ara-identity')
 const { resolve } = require('path')
+const coalesce = require('defined')
 const { readFile } = require('fs')
 const { DID } = require('did-uri')
 const express = require('express')
 const extend = require('extend')
 const pkg = require('./package')
 const https = require('https')
-const path = require('path')
 const http = require('http')
 const rc = require('./rc')()
 const pify = require('pify')
@@ -26,7 +26,7 @@ const fs = require('fs')
 // in milliseconds
 const kRequestTimeout = 5000
 
-const conf = {
+let conf = {
   port: 8000,
   identity: null,
   secret: null,
@@ -40,18 +40,15 @@ let server = null
 let channel = null
 let app = null
 
-let certOptions = {
-
-}
-
 
 async function getInstance() {
   return server
 }
 
 async function configure(opts, program) {
+  let argv = {}
   if (program) {
-    const { argv } = program
+    program
       .option('identity', {
         alias: 'i',
         describe: 'Ara Identity for the network node'
@@ -73,23 +70,36 @@ async function configure(opts, program) {
         describe: 'Port for network node to listen on.'
       })
       .option('sslKey', {
-        alias: '',
+        alias: 'sKey',
         describe: 'Path to ssl key file for the server'
       })
       .option('sslCert', {
-        alias: '',
+        alias: 'sCert',
         describe: 'Path to ssl certificate file for the server'
       })
+      // eslint-disable-next-line prefer-destructuring
+      argv = program.argv
   }
+  conf.port = select('port', argv, opts, conf)
+  conf.name = select('name', argv, opts, conf)
+  conf.secret = select('secret', argv, opts, conf)
+  conf.keyring = select('keyring', argv, opts, conf)
+  conf.identity = select('identity', argv, opts, conf)
+  conf.sslKey = select('sslKey', argv, opts, conf)
+  conf.sslCert = select('sslCert', argv, opts, conf)
 
-  return extend(true, conf, opts)
+  return conf
+
+  function select(k, ...args) {
+    return coalesce(...args.map(o => o[k]))
+  }
 }
 
 async function start(argv) {
   if (channel) {
     return false
   }
-
+  console.log(conf)
   channel = createChannel({ })
 
   let { password } = await inquirer.prompt([
@@ -101,22 +111,22 @@ async function start(argv) {
         'Passphrase:'
     }
   ])
-  if (0 !== argv.identity.indexOf('did:ara:')) {
-    argv.identity = `did:ara:${conf.identity}`
+  if (0 !== conf.identity.indexOf('did:ara:')) {
+    conf.identity = `did:ara:${conf.identity}`
   }
-  const did = new DID(argv.identity)
+  const did = new DID(conf.identity)
   const publicKey = Buffer.from(did.identifier, 'hex')
 
   password = crypto.blake2b(Buffer.from(password))
 
   const hash = crypto.blake2b(publicKey).toString('hex')
   const path = resolve(rc.network.identity.root, hash, 'keystore/ara')
-  const secret = Buffer.from(argv.secret)
+  const secret = Buffer.from(conf.secret)
   const keystore = JSON.parse(await pify(readFile)(path, 'utf8'))
   const secretKey = ss.decrypt(keystore, { key: password.slice(0, 16) })
 
-  const keyring = keyRing(argv.keyring, { secret: secretKey })
-  const buffer = await keyring.get(argv.name)
+  const keyring = keyRing(conf.keyring, { secret: secretKey })
+  const buffer = await keyring.get(conf.name)
   const unpacked = unpack({ buffer })
 
   const { discoveryKey } = unpacked
@@ -129,7 +139,11 @@ async function start(argv) {
   app.get('/api/v1/resolve/', onresolve)
 
   if (conf.sslCert && conf.sslKey) {
-    server = https.createServer({key: conf.sslKey, cert: conf.sslCert}, app)
+    const certOpts = {
+      key: fs.readFileSync(resolve(conf.sslKey)),
+      cert: fs.readFileSync(resolve(conf.sslCert))
+    }
+    server = https.createServer(certOpts, app)
   }
   else {
     server = http.createServer(app)
