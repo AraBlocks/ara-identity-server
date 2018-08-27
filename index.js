@@ -18,6 +18,9 @@ const pkg = require('./package')
 const http = require('http')
 const rc = require('./rc')()
 const pify = require('pify')
+const https = require('https')
+const path = require('path')
+const fs = require('fs')
 
 
 // in milliseconds
@@ -34,6 +37,12 @@ const conf = {
 let server = null
 let channel = null
 let app = null
+
+let certOptions = {
+  key: fs.readFileSync(path.resolve('/Users/prashanthbalasubramani/Desktop/server.key')),
+  cert: fs.readFileSync(path.resolve('/Users/prashanthbalasubramani/Desktop/server.crt'))
+}
+
 
 async function getInstance() {
   return server
@@ -106,11 +115,11 @@ async function start(argv) {
   info('%s: discovery key:', pkg.name, discoveryKey.toString('hex'))
 
   app = express()
-
+  
   app.post('/api/v1/create/', oncreate)
   app.get('/api/v1/resolve/', onresolve)
 
-  server = http.createServer(app)
+  server = https.createServer(certOptions, app)
   channel = createChannel({
     dht: { interval: conf['dht-announce-interval'] },
     dns: { interval: conf['dns-announce-interval'] },
