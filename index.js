@@ -144,7 +144,7 @@ async function start(argv) {
   } else {
     server = http.createServer(app)
   }
-  
+
   server.listen(argv.port, onlisten)
   server.once('error', (err) => {
     if (err && 'EADDRINUSE' === err.code) { server.listen(0, onlisten) }
@@ -189,8 +189,8 @@ async function start(argv) {
           req.query.did = `did:ara:${req.query.did}`
         }
         info('%s: Resolve request received for: %s', pkg.name, req.query.did)
-        const id = new DID(req.query.did)
-        const publicKey = Buffer.from(id.identifier, 'hex')
+        const did = new DID(req.query.did)
+        const publicKey = Buffer.from(did.identifier, 'hex')
         const hash = crypto.blake2b(publicKey).toString('hex')
         const path = resolve(rc.network.identity.root, hash, 'ddo.json')
         const ddo = JSON.parse(await pify(readFile)(path, 'utf8'))
