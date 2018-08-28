@@ -4,7 +4,7 @@ const { createChannel } = require('ara-network/discovery/channel')
 const { unpack, keyRing } = require('ara-network/keys')
 const { writeIdentity } = require('ara-identity/util')
 const { readFile, readFileSync } = require('fs')
-const { info, warn } = require('ara-console')
+const { info, warn, error } = require('ara-console')
 const ss = require('ara-secret-storage')
 const context = require('ara-context')()
 const inquirer = require('inquirer')
@@ -95,7 +95,7 @@ async function configure(opts, program) {
   }
 }
 
-async function start(argv) {
+async function start() {
   if (channel) {
     return false
   }
@@ -128,9 +128,9 @@ async function start(argv) {
   const keyring = keyRing(conf.keyring, { secret: secretKey })
   const buffer = await keyring.get(conf.name)
 
-  if ( !buffer.length ) {
+  if (!buffer.length) {
     error(`No discoveryKey found from network key named: ${conf.name} and keyring: ${conf.keyring}.`)
-    error(`Please try a diffrent key name ('-n' option) or keyring ('-k' option).`)
+    error('Please try a diffrent key name (\'-n\' option) or keyring (\'-k\' option).')
   }
 
   const unpacked = unpack({ buffer })
