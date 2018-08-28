@@ -165,7 +165,7 @@ async function start(argv) {
           did,
           mnemonic: identifier.mnemonic
         }
-        info('%s: New Identity created successfully: %s', pkg.name, id)
+        info('%s: New Identity created successfully: %s', pkg.name, did)
         res.setHeader('Content-Type', 'application/json')
         res.end(JSON.stringify(response))
         res.on('finish', () => { clearTimeout(timer) })
