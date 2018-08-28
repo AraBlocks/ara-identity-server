@@ -48,34 +48,34 @@ async function configure(opts, program) {
       .option('identity', {
         alias: 'i',
         describe: 'Ara Identity for the network node',
-        required: true
+        required: true,
       })
       .option('secret', {
         alias: 's',
         describe: 'Shared secret key',
-        required: true
+        required: true,
       })
       .option('name', {
         alias: 'n',
         describe: 'Human readable network keys name.',
-        required: true
+        required: true,
       })
       .option('keyring', {
         alias: 'k',
         describe: 'Path to ARA network keys',
-        required: true
+        required: true,
       })
       .option('port', {
         alias: 'p',
-        describe: 'Port for network node to listen on.'
+        describe: 'Port for network node to listen on.',
       })
       .option('sslKey', {
         alias: 'sk',
-        describe: 'Path to ssl key file for the server'
+        describe: 'Path to ssl key file for the server',
       })
       .option('sslCert', {
         alias: 'sc',
-        describe: 'Path to ssl certificate file for the server'
+        describe: 'Path to ssl certificate file for the server',
       })
       // eslint-disable-next-line prefer-destructuring
     argv = program.argv
