@@ -68,14 +68,17 @@ async function configure(opts, program) {
       .option('port', {
         alias: 'p',
         describe: 'Port for network node to listen on.',
+        type: 'number'
       })
       .option('sslKey', {
-        alias: 'sk',
+        alias: 'K',
         describe: 'Path to ssl key file for the server',
+        type: 'string'
       })
       .option('sslCert', {
-        alias: 'sc',
+        alias: 'C',
         describe: 'Path to ssl certificate file for the server',
+        type: 'string'
       })
       // eslint-disable-next-line prefer-destructuring
     argv = program.argv
@@ -121,6 +124,7 @@ async function start() {
 
   const hash = crypto.blake2b(publicKey).toString('hex')
   const path = resolve(rc.network.identity.root, hash, 'keystore/ara')
+  // @TODO : Enable & use conf.secret to perform handshake when archiving functionality is added in the future
   // const secret = Buffer.from(conf.secret)
   const keystore = JSON.parse(await pify(readFile)(path, 'utf8'))
   const secretKey = ss.decrypt(keystore, { key: password.slice(0, 16) })
@@ -164,7 +168,7 @@ async function start() {
     const timer = setTimeout(() => { res.status(408).send('Request Timed Out') }, kRequestTimeout)
     try {
       if (undefined === req.query.passphrase) {
-        res.status(401).send('Missing Passphrase').end()
+        res.status(400).send('Missing Passphrase').end()
         clearTimeout(timer)
       } else {
         info('%s: Received create request', pkg.name)
@@ -177,6 +181,7 @@ async function start() {
         }
         info('%s: New Identity created successfully: %s', pkg.name, did)
         res.setHeader('Content-Type', 'application/json')
+        res.status(200)
         res.end(JSON.stringify(response))
         res.on('finish', () => { clearTimeout(timer) })
       }
@@ -191,7 +196,7 @@ async function start() {
     const timer = setTimeout(() => { res.status(408).send('Request Timed Out') }, kRequestTimeout)
     try {
       if (undefined === req.query.did) {
-        res.status(401).send('Missing DID').end()
+        res.status(400).send('Missing DID').end()
         clearTimeout(timer)
       } else {
         if (0 !== req.query.did.indexOf('did:ara:')) {
@@ -205,6 +210,7 @@ async function start() {
         const ddo = JSON.parse(await pify(readFile)(path, 'utf8'))
         info('%s: Resolve request completed successfully!!!!', pkg.name)
         res.setHeader('Content-Type', 'application/json')
+        res.status(200)
         res.end(JSON.stringify(ddo))
         res.on('finish', () => { clearTimeout(timer) })
       }
