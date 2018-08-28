@@ -187,7 +187,7 @@ async function start() {
       }
     } catch (err) {
       debug(err)
-      res.status(401).send('Create request failed').end()
+      res.status(500).send('Create request failed').end()
       clearTimeout(timer)
     }
   }
@@ -216,7 +216,7 @@ async function start() {
       }
     } catch (err) {
       debug(err)
-      res.status(401).send('Resolve request failed. Invalid DID').end()
+      res.status(500).send('Resolve request failed. Invalid DID').end()
       clearTimeout(timer)
     }
   }
