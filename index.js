@@ -17,13 +17,15 @@ const express = require('express')
 const pkg = require('./package')
 const https = require('https')
 const http = require('http')
+const aid = require('ara-identity')
+const pkg = require('./package')
+const ss = require('ara-secret-storage')
 const rc = require('./rc')()
-const pify = require('pify')
 
 // in milliseconds
 const kRequestTimeout = 5000
 
-const conf = {
+let conf = {
   port: 8000,
   identity: null,
   secret: null,
@@ -47,19 +49,23 @@ async function configure(opts, program) {
     program
       .option('identity', {
         alias: 'i',
-        describe: 'Ara Identity for the network node'
+        describe: 'Ara Identity for the network node.',
+        required: true,
       })
       .option('secret', {
         alias: 's',
-        describe: 'Shared secret key'
+        describe: 'Shared secret key',
+        required: true,
       })
       .option('name', {
         alias: 'n',
-        describe: 'Human readable network keys name.'
+        describe: 'Human readable network keys name.',
+        required: true,
       })
       .option('keyring', {
         alias: 'k',
-        describe: 'Path to ARA network keys'
+        describe: 'Path to ARA network keys.',
+        required: true,
       })
       .option('port', {
         alias: 'p',
@@ -121,12 +127,17 @@ async function start(argv) {
   const keystore = JSON.parse(await pify(readFile)(path, 'utf8'))
   const secretKey = ss.decrypt(keystore, { key: password.slice(0, 16) })
 
-  const keyring = keyRing(conf.keyring, { secret: secretKey })
-  const buffer = await keyring.get(conf.name)
+  const keyring = keyRing(argv.keyring, { secret: secretKey })
+  const buffer = await keyring.get(argv.name)
+
+  if ( !buffer.length ) {
+    error(`No discoveryKey found from network key named: ${argv.name} and keyring: ${argv.keyring}.`)
+    error(`Please try a diffrent key name ('-n' option) or keyring ('-k' option).`)
+  }
+
   const unpacked = unpack({ buffer })
 
   const { discoveryKey } = unpacked
-
   info('%s: discovery key:', pkg.name, discoveryKey.toString('hex'))
 
   app = express()
@@ -148,6 +159,7 @@ async function start(argv) {
   server.once('error', (err) => {
     if (err && 'EADDRINUSE' === err.code) { server.listen(0, onlisten) }
   })
+
   return true
 
   async function oncreate(req, res) {
