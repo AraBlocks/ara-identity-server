@@ -67,11 +67,11 @@ async function configure(opts, program) {
         describe: 'Port for network node to listen on.'
       })
       .option('sslKey', {
-        alias: 'sKey',
+        alias: 'sk',
         describe: 'Path to ssl key file for the server'
       })
       .option('sslCert', {
-        alias: 'sCert',
+        alias: 'sc',
         describe: 'Path to ssl certificate file for the server'
       })
       // eslint-disable-next-line prefer-destructuring
