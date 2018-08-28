@@ -3,6 +3,7 @@ const debug = require('debug')('ara:network:node:identity-manager')
 const { createChannel } = require('ara-network/discovery/channel')
 const { unpack, keyRing } = require('ara-network/keys')
 const { writeIdentity } = require('ara-identity/util')
+const { readFile, readFileSync } = require('fs')
 const { info, warn } = require('ara-console')
 const ss = require('ara-secret-storage')
 const context = require('ara-context')()
@@ -11,7 +12,6 @@ const crypto = require('ara-crypto')
 const aid = require('ara-identity')
 const { resolve } = require('path')
 const coalesce = require('defined')
-const { readFile } = require('fs')
 const { DID } = require('did-uri')
 const express = require('express')
 const pkg = require('./package')
@@ -19,7 +19,6 @@ const https = require('https')
 const http = require('http')
 const rc = require('./rc')()
 const pify = require('pify')
-const fs = require('fs')
 
 // in milliseconds
 const kRequestTimeout = 5000
@@ -137,8 +136,8 @@ async function start(argv) {
 
   if (conf.sslCert && conf.sslKey) {
     const certOpts = {
-      key: fs.readFileSync(resolve(conf.sslKey)),
-      cert: fs.readFileSync(resolve(conf.sslCert))
+      key: readFileSync(resolve(conf.sslKey)),
+      cert: readFileSync(resolve(conf.sslCert))
     }
     server = https.createServer(certOpts, app)
   } else {
