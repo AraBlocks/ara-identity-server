@@ -129,7 +129,7 @@ async function start(argv) {
   const buffer = await keyring.get(conf.name)
 
   if ( !buffer.length ) {
-    error(`No discoveryKey found from network key named: ${argv.name} and keyring: ${argv.keyring}.`)
+    error(`No discoveryKey found from network key named: ${conf.name} and keyring: ${conf.keyring}.`)
     error(`Please try a diffrent key name ('-n' option) or keyring ('-k' option).`)
   }
 
@@ -154,7 +154,7 @@ async function start(argv) {
     server = http.createServer(app)
   }
 
-  server.listen(argv.port, onlisten)
+  server.listen(conf.port, onlisten)
   server.once('error', (err) => {
     if (err && 'EADDRINUSE' === err.code) { server.listen(0, onlisten) }
   })
