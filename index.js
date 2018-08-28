@@ -144,10 +144,7 @@ async function start(argv) {
   } else {
     server = http.createServer(app)
   }
-  channel = createChannel({
-    dht: { interval: conf['dht-announce-interval'] },
-    dns: { interval: conf['dns-announce-interval'] },
-  })
+  
   server.listen(argv.port, onlisten)
   server.once('error', (err) => {
     if (err && 'EADDRINUSE' === err.code) { server.listen(0, onlisten) }
