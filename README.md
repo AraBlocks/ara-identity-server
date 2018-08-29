@@ -24,6 +24,23 @@ $ cd ~/ara-network && npm link ara-network-node-identity-manager
 or run all commands in `~/ara-network-node-identity-manager` directory.
 
 ## Usage
+Use [ann](https://github.com/arablocks/ara-network) to spin up an express server with the following options:
+```
+usage: ann -t ara-network-node-identity-manager [options]
+
+Options:
+  --debug, -D     Enable debug output                                  [boolean]
+  --conf, -C      Path to configuration file                            [string]
+  --help, -h      Show help                                            [boolean]
+  --identity, -i  Ara Identity for the network node          [string] [required]
+  --secret, -s    Shared secret key                                     [string]
+  --name, -n      Human readable network keys name.          [string] [required]
+  --keyring, -k   Path to ARA network keys                   [string] [required]
+  --port, -p      Port for network node to listen on.                   [number]
+  --sslKey, -K    Path to ssl key file for the server                   [string]
+  --sslCert, -C   Path to ssl certificate file for the server           [string]
+```
+
 Create an http server:
 ```
 $ ann -t . -i DID -k ~/.ara/keyring -n name
