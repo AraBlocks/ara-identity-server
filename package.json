@@ -1,7 +1,7 @@
 {
   "name": "ara-network-node-identity-manager",
   "version": "1.0.0",
-  "description": "A cryptographic key management system which exposes a http api to create ARA identities",
+  "description": "A cryptographic key management system which exposes a http api to create Ara identities",
   "main": "index.js",
   "scripts": {
     "test": " ",
@@ -27,13 +27,13 @@
   },
   "homepage": "https://github.com/AraBlocks/ara-network-node-identity-manager#readme",
   "dependencies": {
-    "ara-console": "github:arablocks/ara-console",
-    "ara-context": "github:arablocks/ara-context",
-    "ara-crypto": "github:arablocks/ara-crypto",
-    "ara-identity": "github:arablocks/ara-identity",
-    "ara-network": "github:arablocks/ara-network",
-    "ara-runtime-configuration": "github:arablocks/ara-runtime-configuration",
-    "ara-secret-storage": "github:arablocks/ara-secret-storage",
+    "ara-console": "arablocks/ara-console#0.1.2",
+    "ara-context": "arablocks/ara-context#0.2.0",
+    "ara-crypto": "arablocks/ara-crypto#0.7.0",
+    "ara-identity": "arablocks/ara-identity#0.4.0",
+    "ara-network": "arablocks/ara-network#1.0.0-beta.2",
+    "ara-runtime-configuration": "arablocks/ara-runtime-configuration#0.4.0",
+    "ara-secret-storage": "arablocks/ara-secret-storage#0.1.1",
     "debug": "^3.1.0",
     "defined": "^1.0.0",
     "did-uri": "^0.2.4",
@@ -45,7 +45,7 @@
   "devDependencies": {
     "ava": "^0.25.0",
     "eslint": "^4.19.1",
-    "eslint-config-ara": "github:arablocks/eslint-config-ara",
+    "eslint-config-ara": "arablocks/eslint-config-ara#2.0.0",
     "eslint-plugin-import": "^2.12.0"
   }
 }
