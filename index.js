@@ -23,6 +23,21 @@ const rc = require('./rc')()
 // in milliseconds
 const kRequestTimeout = 5000
 
+const appRoute = '/api/v1'
+
+const status = {
+  internalServerError: 500,
+  requestTimeout: 408,
+  notImplemented: 501,
+  badRequest: 400,
+  notFound: 404,
+  ok: 200,
+}
+
+const msg = {
+  requestTimeout: `Request timed out after ${kRequestTimeout} ms. \n`
+}
+
 const conf = {
   port: 8000,
   identity: null,
@@ -53,7 +68,7 @@ async function configure(opts, program) {
       .option('secret', {
         alias: 's',
         describe: 'Shared secret key',
-        required: true,
+        // required: true, // see secret@TODO
       })
       .option('name', {
         alias: 'n',
@@ -124,7 +139,7 @@ async function start() {
 
   const hash = crypto.blake2b(publicKey).toString('hex')
   const path = resolve(rc.network.identity.root, hash, 'keystore/ara')
-  // @TODO : Enable & use conf.secret to perform handshake when archiving functionality is added in the future
+  // secret@TODO: Enable & use conf.secret to perform handshake when archiving functionality added
   // const secret = Buffer.from(conf.secret)
   const keystore = JSON.parse(await pify(readFile)(path, 'utf8'))
   const secretKey = ss.decrypt(keystore, { key: password.slice(0, 16) })
@@ -138,15 +153,26 @@ async function start() {
   }
 
   const unpacked = unpack({ buffer })
-
   const { discoveryKey } = unpacked
-
   info('%s: discovery key:', pkg.name, discoveryKey.toString('hex'))
 
+  // Server
   app = express()
 
-  app.post('/api/v1/create/', oncreate)
-  app.get('/api/v1/resolve/', onresolve)
+  app.post(`${appRoute}/create/`, oncreate)
+  app.get(`${appRoute}/resolve/`, onresolve)
+
+  app.all(`${appRoute}/update/`, (req, res) => {
+    res
+      .status(status.notImplemented)
+      .send('`update` not implemented. \n')
+  })
+
+  app.all(`${appRoute}/delete/`, (req, res) => {
+    res
+      .status(status.notImplemented)
+      .send('`delete` not implemented. \n')
+  })
 
   if (conf.sslCert && conf.sslKey) {
     const certOpts = {
@@ -154,7 +180,13 @@ async function start() {
       cert: readFileSync(resolve(conf.sslCert))
     }
     server = https.createServer(certOpts, app)
+    info('Creating an _https_ server.')
+  } else if (conf.sslCert || conf.sslKey) {
+    warn('`sslCert` and `sslKey` are required for an https server. Only one was provided.')
+    warn('Creating an _http_ server.')
+    server = http.createServer(app)
   } else {
+    info('Creating an _http_ server.')
     server = http.createServer(app)
   }
 
@@ -162,17 +194,37 @@ async function start() {
   server.once('error', (err) => {
     if (err && 'EADDRINUSE' === err.code) { server.listen(0, onlisten) }
   })
+
   return true
 
   async function oncreate(req, res) {
-    const timer = setTimeout(() => { res.status(408).send('Request Timed Out') }, kRequestTimeout)
+    const timer = setTimeout(() => {
+      res
+        .status(status.requestTimeout)
+        .send(msg.requestTimeout)
+    }, kRequestTimeout)
+
     try {
       if (undefined === req.query.passphrase) {
-        res.status(400).send('Missing Passphrase').end()
+        res
+          .status(status.badRequest)
+          .send('Missing Passphrase parameter. Try `?passphrase=somepassphrase` \n')
+          .end()
+        clearTimeout(timer)
+      } else if ('' === req.query.passphrase) {
+        res
+          .status(status.badRequest)
+          .send('Missing Passphrase parameter value. Try `?passphrase=somepassphrase` \n')
+          .end()
         clearTimeout(timer)
       } else {
+        res.status(status.ok)
         info('%s: Received create request', pkg.name)
-        const identifier = await aid.create({ context, password: req.query.passphrase })
+
+        const identifier = await aid.create({
+          context,
+          password: req.query.passphrase
+        })
         const did = `did:ara:${identifier.publicKey.toString('hex')}`
         await writeIdentity(identifier)
         const response = {
@@ -180,43 +232,74 @@ async function start() {
           mnemonic: identifier.mnemonic
         }
         info('%s: New Identity created successfully: %s', pkg.name, did)
+
         res.setHeader('Content-Type', 'application/json')
-        res.status(200)
         res.end(JSON.stringify(response))
         res.on('finish', () => { clearTimeout(timer) })
       }
     } catch (err) {
+      res
+        .status(status.internalServerError)
+        .send('Create request failed. \n')
+        .end()
       debug(err)
-      res.status(500).send('Create request failed').end()
       clearTimeout(timer)
     }
   }
 
   async function onresolve(req, res) {
-    const timer = setTimeout(() => { res.status(408).send('Request Timed Out') }, kRequestTimeout)
+    const timer = setTimeout(() => {
+      res
+        .status(status.requestTimeout)
+        .send(msg.requestTimeout)
+    }, kRequestTimeout)
+
     try {
       if (undefined === req.query.did) {
-        res.status(400).send('Missing DID').end()
+        res
+          .status(status.badRequest)
+          .send('Missing DID parameter. Try `?did=did:ara:somedid` \n')
+          .end()
         clearTimeout(timer)
+      } else if ('' === req.query.did) {
+        res
+          .status(status.badRequest)
+          .send('Missing Passphrase parameter value. Try `?did=did:ara:somedid` \n')
+          .end()
+        // clearTimeout(timer)
       } else {
         if (0 !== req.query.did.indexOf('did:ara:')) {
           req.query.did = `did:ara:${req.query.did}`
         }
+        res.status(status.ok)
         info('%s: Resolve request received for: %s', pkg.name, req.query.did)
-        const did = new DID(req.query.did)
-        const publicKey = Buffer.from(did.identifier, 'hex')
-        const hash = crypto.blake2b(publicKey).toString('hex')
-        const path = resolve(rc.network.identity.root, hash, 'ddo.json')
-        const ddo = JSON.parse(await pify(readFile)(path, 'utf8'))
-        info('%s: Resolve request completed successfully!!!!', pkg.name)
-        res.setHeader('Content-Type', 'application/json')
-        res.status(200)
-        res.end(JSON.stringify(ddo))
-        res.on('finish', () => { clearTimeout(timer) })
+
+        try {
+          const did = new DID(req.query.did)
+          const publicKey = Buffer.from(did.identifier, 'hex')
+          const hash = crypto.blake2b(publicKey).toString('hex')
+          const path = resolve(rc.network.identity.root, hash, 'ddo.json')
+          const ddo = JSON.parse(await pify(readFile)(path, 'utf8'))
+          info('%s: Resolve request completed successfully!!!!', pkg.name)
+
+          res.setHeader('Content-Type', 'application/json')
+          res.end(JSON.stringify(ddo))
+          res.on('finish', () => { clearTimeout(timer) })
+        } catch (e) {
+          res
+            .status(status.notFound)
+            .send(`Could not resolve DID: ${req.query.did}\n`)
+            .end()
+          debug(status.notFound, e)
+          clearTimeout(timer)
+        }
       }
     } catch (err) {
-      debug(err)
-      res.status(500).send('Resolve request failed. Invalid DID').end()
+      res
+        .status(status.internalServerError)
+        .send(`Could not resolve DID: ${req.query.did}\n`)
+        .end()
+      debug(status.internalServerError, err)
       clearTimeout(timer)
     }
   }
