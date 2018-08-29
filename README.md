@@ -5,12 +5,8 @@
 
 A cryptographic key management system which exposes a http api to create Ara identities.
 
-
-
 ## Status
 **WIP**
-
-> **Important**: Important oddities and common gotchas.
 
 ## Dependencies
 - [Node](https://nodejs.org/en/download/)
@@ -20,15 +16,33 @@ A cryptographic key management system which exposes a http api to create Ara ide
 $ npm install ara-network ara-network-node-identity-manager
 ```
 
-## Usage
+> **Important**: Ensure ara-network is linked:
+```sh
+$ cd ~/ara-network-node-identity-manager && npm link
+$ cd ~/ara-network && npm link ara-network-node-identity-manager
 ```
-$ ann -t . -i DID -s secret -k ~/.ara/keyring -n name -p 8000
+or run all commands in `~/ara-network-node-identity-manager` directory.
+
+## Usage
+Create an http server:
+```
+$ ann -t . -i DID -k ~/.ara/keyring -n name
+```
+
+Create an https server:
+```
+$ ann -t . -i DID -k ~/.ara/keyring -n name -C example-cert.pem -K example-key.pem
+```
+
+Specify port and shared secret key:
+```
+$ ann -t . -i DID -k ~/.ara/keyring -n name -s sharedsecret -p 1337
 ```
 
 ## Example
 
 ```
-$ DEBUG=express* ann -t . -i did:ara:3dcd040d936f78a35d5ae905001282444a32511718a87c70069624f70d87d994 -s asdf -k ~/.ara/keyring -n resolver -p 8877
+$ DEBUG=express* ann -t . -i did:ara:3dcd040d936f78a35d5ae905001282444a32511718a87c70069624f70d87d994 -k ~/.ara/keyring -n resolver -p 8877
  ara: info:  Configuring network node '.'.
  ara: info:  Starting network node '.'
 ? Please enter the passphrase associated with the node identity.
@@ -64,22 +78,50 @@ Passphrase: [hidden]
 
 ```
 
-### `create`
+## API
+
+* [create](#create)
+* [resolve](#resolve)
+
+### `create ? passphrase` <a name="create"></a>
+
+Accepts a passphrase then creates and returns a DID.
+- `passphrase`: A new passphrase
+
+Returns an object:
+- `did`: 'did:ara:abc123...'
+- `mnemonic`: 'word some thing else ...'
+
+> **Important**: Store the mnemonic in a safe, analog place; it is the only recovery mechanism for the Ara ID.
+> **Important**: Not sure if the above is true in this situation, maybe just the passphrase is nec.
+
 ```
 $ curl -i -X POST "http://localhost:8877/api/v1/create?passphrase=asdf"
+
 HTTP/1.1 200 OK
 X-Powered-By: Express
 Content-Type: application/json
 Date: Thu, 23 Aug 2018 19:53:38 GMT
 Connection: keep-alive
-Content-Length: 1244
+Content-Length: 177
 
-{"did":"did:ara:eda61c894b4ebf1435d54f09a9ffcb156d7d8b98add588e2a2b508a9d15cab35","mnemonic":"fancy rate bullet turn then style that shoe clump sphere decrease garden","ddo":{"@context":"https://w3id.org/did/v1","id":"did:ara:eda61c894b4ebf1435d54f09a9ffcb156d7d8b98add588e2a2b508a9d15cab35","publicKey":[{"id":"did:ara:eda61c894b4ebf1435d54f09a9ffcb156d7d8b98add588e2a2b508a9d15cab35#owner","type":"Ed25519VerificationKey2018","owner":"did:ara:eda61c894b4ebf1435d54f09a9ffcb156d7d8b98add588e2a2b508a9d15cab35","publicKeyHex":"eda61c894b4ebf1435d54f09a9ffcb156d7d8b98add588e2a2b508a9d15cab35","publicKeyBase58":"GzgXz2xQx7YPEC9MenWhjM6anuMm6XiwL18HDeNKrnSG","publicKeyBase64":"O2mHIlLTr8UNdVPCan/yxVtfYuYrdWI4qK1CKnRXKs1"}],"authentication":[],"service":[],"created":"2018-08-23T19:53:38.845Z","updated":"2018-08-23T19:53:38.845Z","proof":{"type":"Ed25519VerificationKey2018","nonce":"1db5e5aaf227ee6e4a05a5322091eafb7339a3d37d99c84caec42bc3fbddd6f8","domain":"ara","created":"2018-08-23T19:53:38.846Z","creator":"did:ara:eda61c894b4ebf1435d54f09a9ffcb156d7d8b98add588e2a2b508a9d15cab35#owner","signatureValue":"015511d9b57e8285f11b734fb4e16364a349dfc92b5a6f108df478b8dead5b0012da98ffc587acc0504dd8207ab552df060a5f4b4f3b2f87d62912057c9dfe07"}}}
+{
+  "mnemonic" : "pupil quit wisdom lyrics local expire genius analyst ridge flight famous convince",
+  "did" : "did:ara:b7d2cb39d06f8a53716844f24ec059371ecef6d6b6cd514c9d5d8209a46b8b23"
+}
+
 ```
 
-### `resolve`
+### `resolve ? did` <a name="resolve"></a>
+
+Accepts a DID and returns the associated DDO.
+- `did`: A did to resolve
+
+Returns a DDO.
+
 ```
- $ curl -i -X GET "http://localhost:8877/api/v1/resolve?did=did:ara:f68227cd68522794942a78635362223f274433402caf67e6476bec6609060265"
+$ curl -i -X GET "http://localhost:8877/api/v1/resolve?did=did:ara:f68227cd68522794942a78635362223f274433402caf67e6476bec6609060265"
+
 HTTP/1.1 200 OK
 X-Powered-By: Express
 Content-Type: application/json
@@ -87,21 +129,32 @@ Date: Thu, 23 Aug 2018 20:26:00 GMT
 Connection: keep-alive
 Content-Length: 1069
 
-{"@context":"https://w3id.org/did/v1","id":"did:ara:f68227cd68522794942a78635362223f274433402caf67e6476bec6609060265","publicKey":[{"id":"did:ara:f68227cd68522794942a78635362223f274433402caf67e6476bec6609060265#owner","type":"Ed25519VerificationKey2018","owner":"did:ara:f68227cd68522794942a78635362223f274433402caf67e6476bec6609060265","publicKeyHex":"f68227cd68522794942a78635362223f274433402caf67e6476bec6609060265","publicKeyBase58":"HbGQRRvepSHVGG1CKJwAoZUdHUa1wJdEMS1k9Cp2Q6kk","publicKeyBase64":"PaCJ81oUieUlCp4Y1NiIj8nRDNALK9n5kdr7GYJBgJl"}],"authentication":[],"service":[],"created":"2018-08-23T19:57:12.073Z","updated":"2018-08-23T19:57:12.073Z","proof":{"type":"Ed25519VerificationKey2018","nonce":"c56aaa700a99a9c5f7f830407c8de0228563323b773114070c2953f28bc36090","domain":"ara","created":"2018-08-23T19:57:12.076Z","creator":"did:ara:f68227cd68522794942a78635362223f274433402caf67e6476bec6609060265#owner","signatureValue":"d4c66e5c098e69abe8eee6d978ddd0c09837afa0471dc95da13a551415ea2c064464263061339422ac3e94ba132a55a35941d1be8ee8c6157283434e192ac80e"}}
-```
-
-## API
-
-* [reponame.doStuff(arg1, arg2)](#doStuff)
-
-### `reponame.doStuff(arg1, arg2)` <a name="doStuff"></a>
-
-Lorem Ipsum dostuff
-- `arg1`: description
-- `arg2`: description
-
-```js
-const bytes = reponame.doStuff(32, 'ara-docs')
+{
+  "authentication" : [],
+  "proof" : {
+    "signatureValue" : "d4c66e5c098e69abe8eee6d978ddd0c09837afa0471dc95da13a551415ea2c064464263061339422ac3e94ba132a55a35941d1be8ee8c6157283434e192ac80e",
+    "created" : "2018-08-23T19:57:12.076Z",
+    "type" : "Ed25519VerificationKey2018",
+    "domain" : "ara",
+    "creator" : "did:ara:f68227cd68522794942a78635362223f274433402caf67e6476bec6609060265#owner",
+    "nonce" : "c56aaa700a99a9c5f7f830407c8de0228563323b773114070c2953f28bc36090"
+  },
+  "created" : "2018-08-23T19:57:12.073Z",
+  "@context" : "https://w3id.org/did/v1",
+  "service" : [],
+  "id" : "did:ara:f68227cd68522794942a78635362223f274433402caf67e6476bec6609060265",
+  "updated" : "2018-08-23T19:57:12.073Z",
+  "publicKey" : [
+    {
+      "publicKeyBase64" : "PaCJ81oUieUlCp4Y1NiIj8nRDNALK9n5kdr7GYJBgJl",
+      "owner" : "did:ara:f68227cd68522794942a78635362223f274433402caf67e6476bec6609060265",
+      "type" : "Ed25519VerificationKey2018",
+      "id" : "did:ara:f68227cd68522794942a78635362223f274433402caf67e6476bec6609060265#owner",
+      "publicKeyBase58" : "HbGQRRvepSHVGG1CKJwAoZUdHUa1wJdEMS1k9Cp2Q6kk",
+      "publicKeyHex" : "f68227cd68522794942a78635362223f274433402caf67e6476bec6609060265"
+    }
+  ]
+}
 ```
 
 ## Contributing
