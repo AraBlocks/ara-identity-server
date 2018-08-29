@@ -63,21 +63,25 @@ async function configure(opts, program) {
       .option('identity', {
         alias: 'i',
         describe: 'Ara Identity for the network node',
+        type: 'string',
         required: true,
       })
       .option('secret', {
         alias: 's',
         describe: 'Shared secret key',
+        type: 'string',
         // required: true, // see secret@TODO
       })
       .option('name', {
         alias: 'n',
         describe: 'Human readable network keys name.',
+        type: 'string',
         required: true,
       })
       .option('keyring', {
         alias: 'k',
         describe: 'Path to ARA network keys',
+        type: 'string',
         required: true,
       })
       .option('port', {
@@ -88,12 +92,12 @@ async function configure(opts, program) {
       .option('sslKey', {
         alias: 'K',
         describe: 'Path to ssl key file for the server',
-        type: 'string'
+        type: 'string',
       })
       .option('sslCert', {
         alias: 'C',
         describe: 'Path to ssl certificate file for the server',
-        type: 'string'
+        type: 'string',
       })
       // eslint-disable-next-line prefer-destructuring
     argv = program.argv
