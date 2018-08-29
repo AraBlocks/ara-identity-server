@@ -268,7 +268,7 @@ async function start() {
       } else if ('' === req.query.did) {
         res
           .status(status.badRequest)
-          .send('Missing Passphrase parameter value. Try `?did=did:ara:somedid` \n')
+          .send('Missing DID parameter value. Try `?did=did:ara:somedid` \n')
           .end()
         // clearTimeout(timer)
       } else {
