@@ -4,7 +4,7 @@
   "description": "A cryptographic key management system which exposes a http api to create Ara identities",
   "main": "index.js",
   "scripts": {
-    "test": " ",
+    "test": "ava test",
     "lint": "eslint .",
     "lintfix": "eslint . --fix"
   },
@@ -40,7 +40,8 @@
     "express": "^4.16.3",
     "extend": "^3.0.1",
     "inquirer": "^6.1.0",
-    "pify": "^3.0.0"
+    "pify": "^3.0.0",
+    "superagent": "^3.8.3"
   },
   "devDependencies": {
     "ava": "^0.25.0",

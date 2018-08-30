@@ -354,7 +354,6 @@ async function stop() {
 }
 
 module.exports = {
-  REQUEST_TIMEOUT,
   getInstance,
   configure,
   start,
