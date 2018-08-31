@@ -23,7 +23,7 @@ const rc = require('./rc')()
 // in milliseconds
 const kRequestTimeout = 5000
 
-const appRoute = '/api/v1'
+const appRoute = '/1.0/identifiers'
 
 const status = {
   internalServerError: 500,
@@ -41,11 +41,13 @@ const msg = {
 const conf = {
   port: 8000,
   identity: null,
+  password: null, // Not adding password to CLI arguments for now as it will still use the prompt
   secret: null,
   name: null,
   keyring: null,
   sslKey: null,
-  sslCert: null
+  sslCert: null,
+  publicKey: null, // Authentication@ TODO : ara-secret-storage needs to updated to retrieve public network key from keyring
 }
 
 let server = null
@@ -109,6 +111,7 @@ async function configure(opts, program) {
   conf.identity = select('identity', argv, opts, conf)
   conf.sslKey = select('sslKey', argv, opts, conf)
   conf.sslCert = select('sslCert', argv, opts, conf)
+  conf.password = select('password', argv, opts, conf)
 
   return conf
 
@@ -121,18 +124,24 @@ async function start() {
   if (channel) {
     return false
   }
-
+  let password
   channel = createChannel({ })
 
-  let { password } = await inquirer.prompt([
-    {
-      type: 'password',
-      name: 'password',
-      message:
-        'Please enter the passphrase associated with the node identity.\n' +
-        'Passphrase:'
-    }
-  ])
+  if (!conf.password) {
+    ({ password } = await inquirer.prompt([
+      {
+        type: 'password',
+        name: 'password',
+        message:
+          'Please enter the passphrase associated with the node identity.\n' +
+          'Passphrase:'
+      }
+    ]))
+  }
+  else {
+    password = conf.password
+  }
+
   if (0 !== conf.identity.indexOf('did:ara:')) {
     conf.identity = `did:ara:${conf.identity}`
   }
@@ -163,8 +172,8 @@ async function start() {
   // Server
   app = express()
 
-  app.post(`${appRoute}/create/`, oncreate)
-  app.get(`${appRoute}/resolve/`, onresolve)
+  app.post(`${appRoute}/`, oncreate)
+  app.get(`${appRoute}/`, onresolve)
 
   app.all(`${appRoute}/update/`, (req, res) => {
     res
@@ -207,6 +216,9 @@ async function start() {
         .status(status.requestTimeout)
         .send(msg.requestTimeout)
     }, kRequestTimeout)
+
+    // Authentication @TODO - Add Authentication mechanism to verify requests
+    // Use public network key from the keyring file
 
     try {
       if (undefined === req.query.passphrase) {
