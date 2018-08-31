@@ -41,13 +41,14 @@ const msg = {
 const conf = {
   port: 8000,
   identity: null,
-  password: null, // Not adding password to CLI arguments for now as it will still use the prompt
+  password: null,
   secret: null,
   name: null,
   keyring: null,
   sslKey: null,
   sslCert: null,
-  publicKey: null, // Authentication@ TODO : ara-secret-storage needs to updated to retrieve public network key from keyring
+  // Authentication@ TODO : Use public network key in keyring file to validate requests
+  publicKey: null,
 }
 
 let server = null
@@ -137,8 +138,8 @@ async function start() {
           'Passphrase:'
       }
     ]))
-  }
-  else {
+  } else {
+    // eslint-disable-next-line prefer-destructuring
     password = conf.password
   }
 
@@ -217,8 +218,8 @@ async function start() {
         .send(msg.requestTimeout)
     }, kRequestTimeout)
 
-    // Authentication @TODO - Add Authentication mechanism to verify requests
-    // Use public network key from the keyring file
+    // Authentication @TODO - Add Authentication mechanism to validate requests
+    // Use public network key (conf.publicKey) from the keyring file
 
     try {
       if (undefined === req.query.passphrase) {
