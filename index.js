@@ -246,7 +246,8 @@ async function start() {
         await writeIdentity(identifier)
         const response = {
           did,
-          mnemonic: identifier.mnemonic
+          mnemonic: identifier.mnemonic,
+          ddo: identifier.ddo
         }
         info('%s: New Identity created successfully: %s', pkg.name, did)
 
