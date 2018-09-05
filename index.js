@@ -1,4 +1,5 @@
 /* eslint-disable no-shadow */
+/* eslint-disable no-warning-comments */
 const { readFile, readFileSync } = require('fs')
 const { info, warn, error } = require('ara-console')
 const { unpack, keyRing } = require('ara-network/keys')
@@ -21,7 +22,7 @@ const ss = require('ara-secret-storage')
 const rc = require('./rc')()
 
 // in milliseconds
-const kRequestTimeout = 5000
+const REQUEST_TIMEOUT = 5000
 
 const appRoute = '/1.0/identifiers'
 
@@ -35,7 +36,7 @@ const status = {
 }
 
 const msg = {
-  requestTimeout: `Request timed out after ${kRequestTimeout} ms. \n`
+  requestTimeout: `Request timed out after ${REQUEST_TIMEOUT} ms. \n`
 }
 
 const conf = {
@@ -110,6 +111,8 @@ async function configure(opts, program) {
   conf.secret = select('secret', argv, opts, conf)
   conf.keyring = select('keyring', argv, opts, conf)
   conf.identity = select('identity', argv, opts, conf)
+
+  conf.path = select('path', argv, opts, conf, { path: rc.network.identity.root })
   conf.sslKey = select('sslKey', argv, opts, conf)
   conf.sslCert = select('sslCert', argv, opts, conf)
   conf.password = select('password', argv, opts, conf)
@@ -152,7 +155,7 @@ async function start() {
   password = crypto.blake2b(Buffer.from(password))
 
   const hash = crypto.blake2b(publicKey).toString('hex')
-  const path = resolve(rc.network.identity.root, hash, 'keystore/ara')
+  const path = resolve(conf.path, hash, 'keystore/ara')
   // secret@TODO: Enable & use conf.secret to perform handshake when archiving functionality added
   // const secret = Buffer.from(conf.secret)
   const keystore = JSON.parse(await pify(readFile)(path, 'utf8'))
@@ -216,7 +219,7 @@ async function start() {
       res
         .status(status.requestTimeout)
         .send(msg.requestTimeout)
-    }, kRequestTimeout)
+    }, REQUEST_TIMEOUT)
 
     // Authentication @TODO - Add Authentication mechanism to validate requests
     // Use public network key (conf.publicKey) from the keyring file
@@ -270,7 +273,7 @@ async function start() {
       res
         .status(status.requestTimeout)
         .send(msg.requestTimeout)
-    }, kRequestTimeout)
+    }, REQUEST_TIMEOUT)
 
     try {
       if (undefined === req.query.did) {
@@ -296,7 +299,7 @@ async function start() {
           const did = new DID(req.query.did)
           const publicKey = Buffer.from(did.identifier, 'hex')
           const hash = crypto.blake2b(publicKey).toString('hex')
-          const path = resolve(rc.network.identity.root, hash, 'ddo.json')
+          const path = resolve(conf.path, hash, 'ddo.json')
           const ddo = JSON.parse(await pify(readFile)(path, 'utf8'))
           info('%s: Resolve request completed successfully!!!!', pkg.name)
 
@@ -351,6 +354,7 @@ async function stop() {
 }
 
 module.exports = {
+  REQUEST_TIMEOUT,
   getInstance,
   configure,
   start,
