@@ -106,7 +106,7 @@ Passphrase: [hidden]
 * [create](#create)
 * [resolve](#resolve)
 
-### `status` <a name="status"></a>
+### `status`
 
 Emits back a message if the server is reachable and running
 
