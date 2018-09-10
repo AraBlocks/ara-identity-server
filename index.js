@@ -235,7 +235,13 @@ async function start() {
     // Use public network key (conf.publicKey) from the keyring file
 
     try {
-      if (undefined === req.query.passphrase) {
+      if (undefined === req.headers.authentication || discoveryKey.toString('hex') !== req.headers.authentication) {
+        res
+          .status(status.badRequest)
+          .send('Missing or invalid authentication credentials')
+          .end()
+        clearTimeout(timer)
+      } else if (undefined === req.query.passphrase) {
         res
           .status(status.badRequest)
           .send('Missing Passphrase parameter. Try `?passphrase=somepassphrase` \n')
@@ -250,7 +256,6 @@ async function start() {
       } else {
         res.status(status.ok)
         info('%s: Received create request', pkg.name)
-
         const identifier = await aid.create({
           context,
           password: req.query.passphrase
@@ -287,7 +292,13 @@ async function start() {
     }, REQUEST_TIMEOUT)
 
     try {
-      if (undefined === req.query.did) {
+      if (undefined === req.headers.authentication || discoveryKey.toString('hex') !== req.headers.authentication) {
+        res
+          .status(status.badRequest)
+          .send('Missing or invalid authentication credentials')
+          .end()
+        clearTimeout(timer)
+      } else if (undefined === req.query.did) {
         res
           .status(status.badRequest)
           .send('Missing DID parameter. Try `?did=did:ara:somedid` \n')
