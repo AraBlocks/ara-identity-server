@@ -43,7 +43,8 @@
     "inquirer": "^6.1.0",
     "is-buffer": "^2.0.2",
     "pify": "^3.0.0",
-    "superagent": "^3.8.3"
+    "superagent": "^3.8.3",
+    "json-beautify": "^1.0.1"
   },
   "devDependencies": {
     "ava": "^0.25.0",

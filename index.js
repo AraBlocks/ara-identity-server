@@ -7,6 +7,7 @@ const { info, warn } = require('ara-console')
 const { parse: parseDID } = require('did-uri')
 const { createChannel } = require('ara-network/discovery/channel')
 const { writeIdentity } = require('ara-identity/util')
+const beautify = require('json-beautify')
 const { resolve } = require('path')
 const bodyParser = require('body-parser')
 const inquirer = require('inquirer')
@@ -221,6 +222,7 @@ async function start() {
   }
 
   async function oncreate(req, res) {
+    res.setHeader('Access-Control-Allow-Origin', '*')
     const timer = setTimeout(() => {
       res
         .status(status.requestTimeout)
@@ -266,7 +268,9 @@ async function start() {
         info('%s: New Identity created successfully: %s', pkg.name, did)
 
         res.setHeader('Content-Type', 'application/json')
-        res.end(JSON.stringify(response))
+        // res.end(JSON.stringify(response))
+        const formatted = beautify(response, null, 2, 80)
+        res.end(beautify(response, null, 2, 80))
         res.on('finish', () => { clearTimeout(timer) })
       }
     } catch (err) {
@@ -280,8 +284,7 @@ async function start() {
   }
 
   async function onresolve(req, res) {
-    const now = Date.now()
-
+    res.setHeader('Access-Control-Allow-Origin', '*')
     const timer = setTimeout(() => {
       res
         .status(status.requestTimeout)
@@ -323,7 +326,9 @@ async function start() {
           const duration = Date.now() - now
           const response = createResponse({ did, ddo, duration })
           res.setHeader('Content-Type', 'application/json')
-          res.end(JSON.stringify(response))
+          // res.end(JSON.stringify(ddo))
+          const formatted = beautify(ddo, null, 2, 80)
+          res.end(beautify(ddo, null, 2, 80))
           res.on('finish', () => { clearTimeout(timer) })
           info('%s: Resolve request completed successfully!!!!', pkg.name)
         } catch (e) {
