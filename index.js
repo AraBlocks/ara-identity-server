@@ -3,6 +3,7 @@
 const { readFile, readFileSync } = require('fs')
 const { info, warn, error } = require('ara-console')
 const { unpack, keyRing } = require('ara-network/keys')
+const { parse: parseDID } = require('did-uri')
 const { createChannel } = require('ara-network/discovery/channel')
 const { writeIdentity } = require('ara-identity/util')
 const { resolve } = require('path')
@@ -178,6 +179,7 @@ async function start() {
 
   app.post(`${appRoute}/`, oncreate)
   app.get(`${appRoute}/`, onresolve)
+  app.get(`${appRoute}/status`, onstatus)
 
   app.all(`${appRoute}/update/`, (req, res) => {
     res
@@ -213,6 +215,14 @@ async function start() {
   })
 
   return true
+
+  async function onstatus(req, res) {
+    info('%s: Status ping received', pkg.name)
+    res
+      .status(status.ok)
+      .send('ara-identity-manager up and running!!!!')
+      .end()
+  }
 
   async function oncreate(req, res) {
     const timer = setTimeout(() => {
@@ -269,6 +279,7 @@ async function start() {
   }
 
   async function onresolve(req, res) {
+    const now = Date.now()
     const timer = setTimeout(() => {
       res
         .status(status.requestTimeout)
@@ -301,10 +312,12 @@ async function start() {
           const hash = crypto.blake2b(publicKey).toString('hex')
           const path = resolve(conf.path, hash, 'ddo.json')
           const ddo = JSON.parse(await pify(readFile)(path, 'utf8'))
+          const duration = Date.now() - now
+          const response = createResponse({ did, ddo, duration })
           info('%s: Resolve request completed successfully!!!!', pkg.name)
 
           res.setHeader('Content-Type', 'application/json')
-          res.end(JSON.stringify(ddo))
+          res.end(JSON.stringify(response))
           res.on('finish', () => { clearTimeout(timer) })
         } catch (e) {
           res
@@ -322,6 +335,20 @@ async function start() {
         .end()
       debug(status.internalServerError, err)
       clearTimeout(timer)
+    }
+  }
+
+  function createResponse(opts) {
+    return {
+      didDocument: opts.ddo,
+      didReference: parseDID(opts.did),
+      methodMetadata: {},
+      resolverMetadata: {
+        retrieved: new Date(),
+        duration: opts.duration,
+        driverId: 'did:ara',
+        driver: 'HttpDriver',
+      }
     }
   }
 
