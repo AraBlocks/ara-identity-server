@@ -113,7 +113,7 @@ Returns an object:
 > **Important**: Not sure if the above is true in this situation, maybe just the passphrase is nec.
 
 ```
-$ curl -i -X POST "http://localhost:8877/api/v1/create?passphrase=asdf"
+$ curl --header "authentication: b7d2cb39d06f8a53716844f24ec059371ecef6d6b6cd514c9d5d8209a46b8b23" -i -X POST "http://localhost:8000/1.0/identifiers?passphrase=asdf"
 
 HTTP/1.1 200 OK
 X-Powered-By: Express
@@ -124,7 +124,34 @@ Content-Length: 177
 
 {
   "mnemonic" : "pupil quit wisdom lyrics local expire genius analyst ridge flight famous convince",
-  "did" : "did:ara:b7d2cb39d06f8a53716844f24ec059371ecef6d6b6cd514c9d5d8209a46b8b23"
+  "did" : "did:ara:f68227cd68522794942a78635362223f274433402caf67e6476bec6609060265",
+  "ddo" :
+    {
+      "authentication" : [],
+      "proof" : {
+        "signatureValue" : "d4c66e5c098e69abe8eee6d978ddd0c09837afa0471dc95da13a551415ea2c064464263061339422ac3e94ba132a55a35941d1be8ee8c6157283434e192ac80e",
+        "created" : "2018-08-23T19:57:12.076Z",
+        "type" : "Ed25519VerificationKey2018",
+        "domain" : "ara",
+        "creator" : "did:ara:f68227cd68522794942a78635362223f274433402caf67e6476bec6609060265#owner",
+        "nonce" : "c56aaa700a99a9c5f7f830407c8de0228563323b773114070c2953f28bc36090"
+      },
+      "created" : "2018-08-23T19:57:12.073Z",
+      "@context" : "https://w3id.org/did/v1",
+      "service" : [],
+      "id" : "did:ara:f68227cd68522794942a78635362223f274433402caf67e6476bec6609060265",
+      "updated" : "2018-08-23T19:57:12.073Z",
+      "publicKey" : [
+        {
+          "publicKeyBase64" : "PaCJ81oUieUlCp4Y1NiIj8nRDNALK9n5kdr7GYJBgJl",
+          "owner" : "did:ara:f68227cd68522794942a78635362223f274433402caf67e6476bec6609060265",
+          "type" : "Ed25519VerificationKey2018",
+          "id" : "did:ara:f68227cd68522794942a78635362223f274433402caf67e6476bec6609060265#owner",
+          "publicKeyBase58" : "HbGQRRvepSHVGG1CKJwAoZUdHUa1wJdEMS1k9Cp2Q6kk",
+          "publicKeyHex" : "f68227cd68522794942a78635362223f274433402caf67e6476bec6609060265"
+        }
+      ]
+    }
 }
 
 ```
@@ -137,7 +164,7 @@ Accepts a DID and returns the associated DDO.
 Returns a DDO.
 
 ```
-$ curl -i -X GET "http://localhost:8877/api/v1/resolve?did=did:ara:f68227cd68522794942a78635362223f274433402caf67e6476bec6609060265"
+$ curl --header "authentication: b7d2cb39d06f8a53716844f24ec059371ecef6d6b6cd514c9d5d8209a46b8b23" -i -X GET "http://localhost:8877/api/v1/resolve?did=did:ara:ec8919bb209b81cefb5aaeb13075411adf468c9c532354762ca9ce269ba00e8f"
 
 HTTP/1.1 200 OK
 X-Powered-By: Express
@@ -147,30 +174,65 @@ Connection: keep-alive
 Content-Length: 1069
 
 {
-  "authentication" : [],
-  "proof" : {
-    "signatureValue" : "d4c66e5c098e69abe8eee6d978ddd0c09837afa0471dc95da13a551415ea2c064464263061339422ac3e94ba132a55a35941d1be8ee8c6157283434e192ac80e",
-    "created" : "2018-08-23T19:57:12.076Z",
-    "type" : "Ed25519VerificationKey2018",
-    "domain" : "ara",
-    "creator" : "did:ara:f68227cd68522794942a78635362223f274433402caf67e6476bec6609060265#owner",
-    "nonce" : "c56aaa700a99a9c5f7f830407c8de0228563323b773114070c2953f28bc36090"
-  },
-  "created" : "2018-08-23T19:57:12.073Z",
-  "@context" : "https://w3id.org/did/v1",
-  "service" : [],
-  "id" : "did:ara:f68227cd68522794942a78635362223f274433402caf67e6476bec6609060265",
-  "updated" : "2018-08-23T19:57:12.073Z",
-  "publicKey" : [
-    {
-      "publicKeyBase64" : "PaCJ81oUieUlCp4Y1NiIj8nRDNALK9n5kdr7GYJBgJl",
-      "owner" : "did:ara:f68227cd68522794942a78635362223f274433402caf67e6476bec6609060265",
-      "type" : "Ed25519VerificationKey2018",
-      "id" : "did:ara:f68227cd68522794942a78635362223f274433402caf67e6476bec6609060265#owner",
-      "publicKeyBase58" : "HbGQRRvepSHVGG1CKJwAoZUdHUa1wJdEMS1k9Cp2Q6kk",
-      "publicKeyHex" : "f68227cd68522794942a78635362223f274433402caf67e6476bec6609060265"
+  "didDocument": {
+    "@context": "https://w3id.org/did/v1",
+    "id": "did:ara:ec8919bb209b81cefb5aaeb13075411adf468c9c532354762ca9ce269ba00e8f",
+    "publicKey": [
+      {
+        "id": "did:ara:ec8919bb209b81cefb5aaeb13075411adf468c9c532354762ca9ce269ba00e8f#owner",
+        "type": "Ed25519VerificationKey2018",
+        "owner": "did:ara:ec8919bb209b81cefb5aaeb13075411adf468c9c532354762ca9ce269ba00e8f",
+        "publicKeyHex": "ec8919bb209b81cefb5aaeb13075411adf468c9c532354762ca9ce269ba00e8f",
+        "publicKeyBase58": "GvLUCv4cuLLZK9bBdrgDx5MsSv1AnYXho9W3mppFxbmx",
+        "publicKeyBase64": "OyJGbsgm4HO+1qusTB1QRrfRoycUyNUdiypziaboA6P"
+      },
+      {
+        "id": "did:ara:ec8919bb209b81cefb5aaeb13075411adf468c9c532354762ca9ce269ba00e8f#eth",
+        "type": "Secp256k1VerificationKey2018",
+        "owner": "did:ara:ec8919bb209b81cefb5aaeb13075411adf468c9c532354762ca9ce269ba00e8f",
+        "publicKeyHex": "3a1e2cd7aea7d27c0b5971d840276328b4be8e2e7ded9ef00630d7b4ea897d165e099e4062d8b391edda2f02b203511e490729e3e411ab2f90f424d7cd725fd2",
+        "publicKeyBase58": "2APqouovufGPLL7bPyZZPGqth2CxpG3zufz5uEGk1uLLNyyubGc57rR7Lnuxigxb7KAHSkAB1YN7dFrye3rwe2q7",
+        "publicKeyBase64": "6HizXrqfSfAtZcdhAJ2MotL6OLn3tnvAGMNe06ol9Fl4JnkBi2LOR7dovArIDUR5JBynj5BGrL5D0JNfNcl/S"
+      }
+    ],
+    "authentication": [
+      {
+        "publicKey": "did:ara:ec8919bb209b81cefb5aaeb13075411adf468c9c532354762ca9ce269ba00e8f#owner",
+        "type": "Ed25519SignatureAuthentication2018"
+      },
+      {
+        "publicKey": "did:ara:ec8919bb209b81cefb5aaeb13075411adf468c9c532354762ca9ce269ba00e8f#eth",
+        "type": "Secp256k1SignatureAuthentication2018"
+      }
+    ],
+    "service": [],
+    "created": "2018-09-10T21:20:42.864Z",
+    "updated": "2018-09-10T21:20:42.864Z",
+    "proof": {
+      "type": "Ed25519VerificationKey2018",
+      "nonce": "5a6a1a3a5ed250ba31adbde5909f6c0b8d04a5572b4801c6edc635cfc839f9f8",
+      "domain": "ara",
+      "created": "2018-09-10T21:20:42.867Z",
+      "creator": "did:ara:ec8919bb209b81cefb5aaeb13075411adf468c9c532354762ca9ce269ba00e8f#owner",
+      "signatureValue": "da0b371e3e0e1612132992f99e6025e0daa5b2a5425cdf66c7353b126076ef895ab80679b7d423b9a7c80e4c124bb74c8dda6fcca9011f78feec7b73ce355e04"
     }
-  ]
+  },
+  "didReference": {
+    "reference": "did:ara:ec8919bb209b81cefb5aaeb13075411adf468c9c532354762ca9ce269ba00e8f",
+    "did": "did:ara:ec8919bb209b81cefb5aaeb13075411adf468c9c532354762ca9ce269ba00e8f",
+    "method": "ara",
+    "identifier": "ec8919bb209b81cefb5aaeb13075411adf468c9c532354762ca9ce269ba00e8f",
+    "path": "",
+    "fragment": "",
+    "query": ""
+  },
+  "methodMetadata": {},
+  "resolverMetadata": {
+    "retrieved": "2018-09-10T21:26:37.069Z",
+    "duration": 1,
+    "driverId": "did:ara",
+    "driver": "HttpDriver"
+  }
 }
 ```
 
