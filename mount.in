@@ -12,4 +12,4 @@ mount \
   --types nfs4 \
   --options nfsvers=4.1,rsize=1048576,wsize=1048576,hard,timeo=600,retrans=2 \
   $EFS_ID.efs.$AWS_REGION.amazonaws.com:/ \
-  $CFS_ROOT_DIR
+  $ARA_ROOT_DIR
