@@ -2,6 +2,7 @@ const manager = require('../')
 const test = require('ava')
 
 const request = require('superagent')
+
 const discoveryKey = '24bac296ba1796eb96e243f9e001e2270668f6adf6984f6f625c6a5759d1175e'
 
 async function startManager() {
@@ -34,7 +35,6 @@ test('Create - passphrase', async t => request
   .then((res) => {
     t.true(200 === res.status)
   }))
-
 
 // Create
 test('Create - passphrase', async t => request
