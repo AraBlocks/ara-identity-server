@@ -102,7 +102,7 @@ Passphrase: [hidden]
 
 ## API
 
-* [status](#status)
+* status
 * [create](#create)
 * [resolve](#resolve)
 
