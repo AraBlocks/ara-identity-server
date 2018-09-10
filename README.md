@@ -113,7 +113,7 @@ Returns an object:
 > **Important**: Not sure if the above is true in this situation, maybe just the passphrase is nec.
 
 ```
-$ curl --header "authentication: b7d2cb39d06f8a53716844f24ec059371ecef6d6b6cd514c9d5d8209a46b8b23" -i -X POST "http://localhost:8000/1.0/identifiers?passphrase=asdf"
+$ curl --header "authentication: b7d2cb39d06f8a53716844f24ec059371ecef6d6b6cd514c9d5d8209a46b8b23" -i -X POST "http://localhost:8877/1.0/identifiers?passphrase=asdf"
 
 HTTP/1.1 200 OK
 X-Powered-By: Express
@@ -164,7 +164,7 @@ Accepts a DID and returns the associated DDO.
 Returns a DDO.
 
 ```
-$ curl --header "authentication: b7d2cb39d06f8a53716844f24ec059371ecef6d6b6cd514c9d5d8209a46b8b23" -i -X GET "http://localhost:8877/api/v1/resolve?did=did:ara:ec8919bb209b81cefb5aaeb13075411adf468c9c532354762ca9ce269ba00e8f"
+$ curl --header "authentication: b7d2cb39d06f8a53716844f24ec059371ecef6d6b6cd514c9d5d8209a46b8b23" -i -X GET "http://localhost:8877/1.0/identifiers?did=did:ara:ec8919bb209b81cefb5aaeb13075411adf468c9c532354762ca9ce269ba00e8f"
 
 HTTP/1.1 200 OK
 X-Powered-By: Express
