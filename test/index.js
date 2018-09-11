@@ -1,9 +1,11 @@
+const { readFile } = require('fs')
 const manager = require('../')
 const test = require('ava')
+const path = require('path')
+const pify = require('pify')
 
 const request = require('superagent')
-
-const discoveryKey = '24bac296ba1796eb96e243f9e001e2270668f6adf6984f6f625c6a5759d1175e'
+let discoveryKey
 
 async function startManager() {
   try {
@@ -27,6 +29,9 @@ async function startManager() {
 
 test.before(async () => {
   await startManager()
+  let filePath = path.join(__dirname, 'fixtures/discoveryKey.txt')
+  discoveryKey = await pify(readFile)(filePath, 'utf8')
+  discoveryKey = discoveryKey.replace(/(\r\n\t|\n|\r\t)/gm,"")
 })
 
 // Status
