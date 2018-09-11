@@ -5,6 +5,7 @@ const path = require('path')
 const pify = require('pify')
 
 const request = require('superagent')
+
 let discoveryKey
 
 async function startManager() {
@@ -29,9 +30,9 @@ async function startManager() {
 
 test.before(async () => {
   await startManager()
-  let filePath = path.join(__dirname, 'fixtures/discoveryKey.txt')
+  const filePath = path.join(__dirname, 'fixtures/discoveryKey.txt')
   discoveryKey = await pify(readFile)(filePath, 'utf8')
-  discoveryKey = discoveryKey.replace(/(\r\n\t|\n|\r\t)/gm,"")
+  discoveryKey = discoveryKey.replace(/(\r\n\t|\n|\r\t)/gm, '')
 })
 
 // Status
@@ -46,7 +47,7 @@ test('Create - passphrase', async t => request
   .post('http://localhost:8888/1.0/identifiers')
   .set('authentication', discoveryKey)
   .set('Content-Type', 'application/x-www-form-urlencoded')
-  .send("passphrase=asdf")
+  .send('passphrase=asdf')
   .then((res) => {
     t.true(200 === res.status)
   })
