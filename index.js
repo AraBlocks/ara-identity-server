@@ -37,7 +37,8 @@ const status = {
 }
 
 const msg = {
-  requestTimeout: `Request timed out after ${REQUEST_TIMEOUT} ms. \n`
+  requestTimeout: `Request timed out after ${REQUEST_TIMEOUT} ms. \n`,
+  authenticationFailed: `Missing or invalid authentication credentials. \n`
 }
 
 const conf = {
@@ -238,7 +239,7 @@ async function start() {
       if (undefined === req.headers.authentication || discoveryKey.toString('hex') !== req.headers.authentication) {
         res
           .status(status.badRequest)
-          .send('Missing or invalid authentication credentials')
+          .send(msg.authenticationFailed)
           .end()
         clearTimeout(timer)
       } else if (undefined === req.query.passphrase) {
@@ -284,7 +285,6 @@ async function start() {
   }
 
   async function onresolve(req, res) {
-    const now = Date.now()
     const timer = setTimeout(() => {
       res
         .status(status.requestTimeout)
@@ -295,7 +295,7 @@ async function start() {
       if (undefined === req.headers.authentication || discoveryKey.toString('hex') !== req.headers.authentication) {
         res
           .status(status.badRequest)
-          .send('Missing or invalid authentication credentials')
+          .send(msg.authenticationFailed)
           .end()
         clearTimeout(timer)
       } else if (undefined === req.query.did) {
@@ -322,9 +322,7 @@ async function start() {
           const publicKey = Buffer.from(did.identifier, 'hex')
           const hash = crypto.blake2b(publicKey).toString('hex')
           const path = resolve(conf.path, hash, 'ddo.json')
-          const ddo = JSON.parse(await pify(readFile)(path, 'utf8'))
-          const duration = Date.now() - now
-          const response = createResponse({ did, ddo, duration })
+          const response = JSON.parse(await pify(readFile)(path, 'utf8'))
           info('%s: Resolve request completed successfully!!!!', pkg.name)
 
           res.setHeader('Content-Type', 'application/json')
@@ -346,20 +344,6 @@ async function start() {
         .end()
       debug(status.internalServerError, err)
       clearTimeout(timer)
-    }
-  }
-
-  function createResponse(opts) {
-    return {
-      didDocument: opts.ddo,
-      didReference: parseDID(opts.did),
-      methodMetadata: {},
-      resolverMetadata: {
-        retrieved: new Date(),
-        duration: opts.duration,
-        driverId: 'did:ara',
-        driver: 'HttpDriver',
-      }
     }
   }
 
