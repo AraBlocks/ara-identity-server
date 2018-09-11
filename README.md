@@ -104,25 +104,7 @@ Passphrase: [hidden]
 
 * [create](#create)
 * [resolve](#resolve)
-* [status](#status)
-
-### `status` <a name="status"></a>
-
-Emits back a message if the server is reachable and running
-
-```
-$ curl -i -X GET "http://localhost:8877/1.0/identifiers/status"
-
-HTTP/1.1 200 OK
-X-Powered-By: Express
-Content-Type: text/html; charset=utf-8
-Content-Length: 39
-ETag: W/"27-Lt/602+OsqNBpoQXD3gIgR3WfhI"
-Date: Tue, 11 Sep 2018 16:05:01 GMT
-Connection: keep-alive
-
-ara-identity-manager up and running!!!!
-```
+* [status](#status-route)
 
 ### `create ? passphrase` <a name="create"></a>
 
@@ -241,6 +223,24 @@ Content-Length: 1069
     "signatureValue": "da0b371e3e0e1612132992f99e6025e0daa5b2a5425cdf66c7353b126076ef895ab80679b7d423b9a7c80e4c124bb74c8dda6fcca9011f78feec7b73ce355e04"
   }
 }
+```
+
+### `status` <a name="status-route"></a>
+
+Emits back a message if the server is reachable and running
+
+```
+$ curl -i -X GET "http://localhost:8877/1.0/identifiers/status"
+
+HTTP/1.1 200 OK
+X-Powered-By: Express
+Content-Type: text/html; charset=utf-8
+Content-Length: 39
+ETag: W/"27-Lt/602+OsqNBpoQXD3gIgR3WfhI"
+Date: Tue, 11 Sep 2018 16:05:01 GMT
+Connection: keep-alive
+
+ara-identity-manager up and running!!!!
 ```
 
 ## Contributing
