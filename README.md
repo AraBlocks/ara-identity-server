@@ -111,7 +111,7 @@ Passphrase: [hidden]
 Emits back a message if the server is reachable and running
 
 ```
-curl -i -X GET "http://localhost:8877/1.0/identifiers/status"
+$ curl -i -X GET "http://localhost:8877/1.0/identifiers/status"
 
 HTTP/1.1 200 OK
 X-Powered-By: Express
@@ -132,12 +132,13 @@ Accepts a passphrase then creates and returns a DID.
 Returns an object:
 - `did`: 'did:ara:abc123...'
 - `mnemonic`: 'word some thing else ...'
+- `ddo` : '{"@context": "",....}'
 
 > **Important**: Store the mnemonic in a safe, analog place; it is the only recovery mechanism for the Ara ID.
-> **Important**: Not sure if the above is true in this situation, maybe just the passphrase is nec.
+> **Important**: Not sure if the above is true in this situation, maybe just the passphrase is necessary.
 
 ```
-$ curl --header "authentication: 66d83aa5f9ec2eb722bd7eb41c609deea92040324f9643b5a2b9936a026e441e" -i -X POST "http://localhost:8877/1.0/identifiers?passphrase=asdf"
+$ curl -H "authentication: 66d83aa5f9ec2eb722bd7eb41c609deea92040324f9643b5a2b9936a026e441e" -H 'Content-Type: application/x-www-form-urlencoded' -i -X POST -d "passphrase=asdf" "http://localhost:8000/1.0/identifiers"
 
 HTTP/1.1 200 OK
 X-Powered-By: Express
@@ -188,7 +189,7 @@ Accepts a DID and returns the associated DDO.
 Returns a DDO.
 
 ```
-$ curl --header "authentication: 66d83aa5f9ec2eb722bd7eb41c609deea92040324f9643b5a2b9936a026e441e" -i -X GET "http://localhost:8877/1.0/identifiers?did=did:ara:ec8919bb209b81cefb5aaeb13075411adf468c9c532354762ca9ce269ba00e8f"
+$ curl -H "authentication: 66d83aa5f9ec2eb722bd7eb41c609deea92040324f9643b5a2b9936a026e441e" -i -X GET "http://localhost:8877/1.0/identifiers?did=did:ara:ec8919bb209b81cefb5aaeb13075411adf468c9c532354762ca9ce269ba00e8f"
 
 HTTP/1.1 200 OK
 X-Powered-By: Express

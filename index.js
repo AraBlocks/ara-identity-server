@@ -7,6 +7,7 @@ const { parse: parseDID } = require('did-uri')
 const { createChannel } = require('ara-network/discovery/channel')
 const { writeIdentity } = require('ara-identity/util')
 const { resolve } = require('path')
+const bodyParser = require('body-parser')
 const inquirer = require('inquirer')
 const coalesce = require('defined')
 const context = require('ara-context')()
@@ -177,7 +178,8 @@ async function start() {
 
   // Server
   app = express()
-
+  app.use(bodyParser.urlencoded({extended: true}));
+  
   app.post(`${appRoute}/`, oncreate)
   app.get(`${appRoute}/`, onresolve)
   app.get(`${appRoute}/status`, onstatus)
@@ -242,13 +244,13 @@ async function start() {
           .send(msg.authenticationFailed)
           .end()
         clearTimeout(timer)
-      } else if (undefined === req.query.passphrase) {
+      } else if (undefined === req.body.passphrase) {
         res
           .status(status.badRequest)
           .send('Missing Passphrase parameter. Try `?passphrase=somepassphrase` \n')
           .end()
         clearTimeout(timer)
-      } else if ('' === req.query.passphrase) {
+      } else if ('' === req.body.passphrase) {
         res
           .status(status.badRequest)
           .send('Missing Passphrase parameter value. Try `?passphrase=somepassphrase` \n')
@@ -259,7 +261,7 @@ async function start() {
         info('%s: Received create request', pkg.name)
         const identifier = await aid.create({
           context,
-          password: req.query.passphrase
+          password: req.body.passphrase
         })
         const did = `did:ara:${identifier.publicKey.toString('hex')}`
         await writeIdentity(identifier)
