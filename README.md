@@ -120,7 +120,9 @@ Returns an object:
 > **Important**: Not sure if the above is true in this situation, maybe just the passphrase is necessary.
 
 ```
-$ curl -H "authentication: 66d83aa5f9ec2eb722bd7eb41c609deea92040324f9643b5a2b9936a026e441e" -H 'Content-Type: application/x-www-form-urlencoded' -i -X POST -d "passphrase=asdf" "http://localhost:8877/1.0/identifiers"
+$ curl -H 'authentication: 66d83aa5f9ec2eb722bd7eb41c609deea92040324f9643b5a2b9936a026e441e' \
+       -H 'Content-Type: application/x-www-form-urlencoded' \
+       -i -X POST -d "passphrase=asdf" "http://localhost:8877/1.0/identifiers"
 
 HTTP/1.1 200 OK
 X-Powered-By: Express
@@ -170,8 +172,12 @@ Accepts a DID and returns the associated DDO.
 
 Returns a DDO.
 
+> **Note**: The response format might be changed in the future to match the [did-resolution spec](https://w3c-ccg.github.io/did-resolution/)
+
 ```
-$ curl -H "authentication: 66d83aa5f9ec2eb722bd7eb41c609deea92040324f9643b5a2b9936a026e441e" -i -X GET "http://localhost:8877/1.0/identifiers?did=did:ara:ec8919bb209b81cefb5aaeb13075411adf468c9c532354762ca9ce269ba00e8f"
+$ curl -H "authentication: 66d83aa5f9ec2eb722bd7eb41c609deea92040324f9643b5a2b9936a026e441e" \
+       -i -X GET \
+       "http://localhost:8877/1.0/identifiers?did=did:ara:ec8919bb209b81cefb5aaeb13075411adf468c9c532354762ca9ce269ba00e8f"
 
 HTTP/1.1 200 OK
 X-Powered-By: Express
