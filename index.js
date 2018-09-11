@@ -5,6 +5,7 @@ const { info, warn, error } = require('ara-console')
 const { unpack, keyRing } = require('ara-network/keys')
 const { createChannel } = require('ara-network/discovery/channel')
 const { writeIdentity } = require('ara-identity/util')
+const beautify = require('json-beautify')
 const { resolve } = require('path')
 const inquirer = require('inquirer')
 const coalesce = require('defined')
@@ -215,6 +216,7 @@ async function start() {
   return true
 
   async function oncreate(req, res) {
+    res.setHeader('Access-Control-Allow-Origin', '*')
     const timer = setTimeout(() => {
       res
         .status(status.requestTimeout)
@@ -255,7 +257,9 @@ async function start() {
         info('%s: New Identity created successfully: %s', pkg.name, did)
 
         res.setHeader('Content-Type', 'application/json')
-        res.end(JSON.stringify(response))
+        // res.end(JSON.stringify(response))
+        const formatted = beautify(response, null, 2, 80)
+        res.end(beautify(response, null, 2, 80))
         res.on('finish', () => { clearTimeout(timer) })
       }
     } catch (err) {
@@ -269,6 +273,7 @@ async function start() {
   }
 
   async function onresolve(req, res) {
+    res.setHeader('Access-Control-Allow-Origin', '*')
     const timer = setTimeout(() => {
       res
         .status(status.requestTimeout)
@@ -304,7 +309,9 @@ async function start() {
           info('%s: Resolve request completed successfully!!!!', pkg.name)
 
           res.setHeader('Content-Type', 'application/json')
-          res.end(JSON.stringify(ddo))
+          // res.end(JSON.stringify(ddo))
+          const formatted = beautify(ddo, null, 2, 80)
+          res.end(beautify(ddo, null, 2, 80))
           res.on('finish', () => { clearTimeout(timer) })
         } catch (e) {
           res
