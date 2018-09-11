@@ -38,8 +38,10 @@ test('Create - passphrase', async t => request
 
 // Create
 test('Create - passphrase', async t => request
-  .post('http://localhost:8888/1.0/identifiers/?passphrase=asdf')
+  .post('http://localhost:8888/1.0/identifiers')
   .set('authentication', discoveryKey)
+  .set('Content-Type', 'application/x-www-form-urlencoded')
+  .send("passphrase=asdf")
   .then((res) => {
     t.true(200 === res.status)
   })
@@ -51,6 +53,7 @@ test('Create - passphrase', async t => request
 test('Create - no passphrase param', async t => request
   .post('http://localhost:8888/1.0/identifiers/')
   .set('authentication', discoveryKey)
+  .set('Content-Type', 'application/x-www-form-urlencoded')
   .catch((res) => {
     t.true(400 === res.status)
   }))
@@ -58,6 +61,7 @@ test('Create - no passphrase param', async t => request
 test('Create - no passphrase value', async t => request
   .post('http://localhost:8888/1.0/identifiers/?passphrase=')
   .set('authentication', discoveryKey)
+  .set('Content-Type', 'application/x-www-form-urlencoded')
   .catch((res) => {
     t.true(400 === res.status)
   }))
