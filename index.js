@@ -3,7 +3,6 @@
 const { readFile, readFileSync } = require('fs')
 const { info, warn, error } = require('ara-console')
 const { unpack, keyRing } = require('ara-network/keys')
-const { parse: parseDID } = require('did-uri')
 const { createChannel } = require('ara-network/discovery/channel')
 const { writeIdentity } = require('ara-identity/util')
 const { resolve } = require('path')
@@ -39,7 +38,7 @@ const status = {
 
 const msg = {
   requestTimeout: `Request timed out after ${REQUEST_TIMEOUT} ms. \n`,
-  authenticationFailed: `Missing or invalid authentication credentials. \n`
+  authenticationFailed: 'Missing or invalid authentication credentials. \n'
 }
 
 const conf = {
@@ -178,8 +177,8 @@ async function start() {
 
   // Server
   app = express()
-  app.use(bodyParser.urlencoded({extended: true}));
-  
+  app.use(bodyParser.urlencoded({ extended: true }))
+
   app.post(`${appRoute}/`, oncreate)
   app.get(`${appRoute}/`, onresolve)
   app.get(`${appRoute}/status`, onstatus)
