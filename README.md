@@ -120,7 +120,7 @@ Returns an object:
 > **Important**: Not sure if the above is true in this situation, maybe just the passphrase is necessary.
 
 ```
-$ curl -H "authentication: 66d83aa5f9ec2eb722bd7eb41c609deea92040324f9643b5a2b9936a026e441e" -H 'Content-Type: application/x-www-form-urlencoded' -i -X POST -d "passphrase=asdf" "http://localhost:8000/1.0/identifiers"
+$ curl -H "authentication: 66d83aa5f9ec2eb722bd7eb41c609deea92040324f9643b5a2b9936a026e441e" -H 'Content-Type: application/x-www-form-urlencoded' -i -X POST -d "passphrase=asdf" "http://localhost:8877/1.0/identifiers"
 
 HTTP/1.1 200 OK
 X-Powered-By: Express
