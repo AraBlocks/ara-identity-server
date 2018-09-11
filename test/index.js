@@ -68,6 +68,7 @@ test('Create - no passphrase value', async t => request
   .post('http://localhost:8888/1.0/identifiers/?passphrase=')
   .set('authentication', discoveryKey)
   .set('Content-Type', 'application/x-www-form-urlencoded')
+  .send('passphrase=')
   .catch((res) => {
     t.true(400 === res.status)
   }))
