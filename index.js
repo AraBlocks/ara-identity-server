@@ -38,7 +38,8 @@ const status = {
 
 const msg = {
   requestTimeout: `Request timed out after ${REQUEST_TIMEOUT} ms. \n`,
-  authenticationFailed: 'Missing or invalid authentication credentials. \n'
+  authenticationFailed: 'Missing or invalid authentication credentials. \n',
+  status: 'Ara Identity Manager up and running. \n'
 }
 
 const conf = {
@@ -222,7 +223,7 @@ async function start() {
     info('%s: Status ping received', pkg.name)
     res
       .status(status.ok)
-      .send('ara-identity-manager up and running!!!!')
+      .send(msg.status)
       .end()
   }
 
