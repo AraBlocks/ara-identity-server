@@ -97,8 +97,10 @@ Passphrase: [hidden]
 
 ## Authentication
 
-* For now, the server uses the `discoveryKey` retrieved from the keyring file to validate incoming [create](#create) & [resolve](#resolver) requests
-* The discoveryKey value should be set in the request header as `authentication`
+* For now, the server uses an `authenticationKey` combination of `discoveryKey` & `domain.publicKey` retrieved from the keyring file to validate incoming [create](#create) & [resolve](#resolver) requests
+* The `authenticationKey` should be set in the request header as `authentication`
+* The `authenticationKey` value can be retrieved using `getClientKey()` method under `util.js`
+* Please refer to [ara-network](https://github.com/arablocks/ara-network) to learn more about keyrings
 
 ## API
 
@@ -120,7 +122,7 @@ Returns an object:
 > **Important**: Not sure if the above is true in this situation, maybe just the passphrase is necessary.
 
 ```
-$ curl -H 'authentication: 66d83aa5f9ec2eb722bd7eb41c609deea92040324f9643b5a2b9936a026e441e' \
+$ curl -H 'authentication: <authenticationKey>' \
        -H 'Content-Type: application/x-www-form-urlencoded' \
        -i -X POST -d "passphrase=asdf" "http://localhost:8877/1.0/identifiers"
 
@@ -175,7 +177,7 @@ Returns a DDO.
 > **Note**: The response format might be changed in the future to match the [did-resolution spec](https://w3c-ccg.github.io/did-resolution/)
 
 ```
-$ curl -H "authentication: 66d83aa5f9ec2eb722bd7eb41c609deea92040324f9643b5a2b9936a026e441e" \
+$ curl -H "authentication: <authenticationKey>" \
        -i -X GET \
        "http://localhost:8877/1.0/identifiers?did=did:ara:ec8919bb209b81cefb5aaeb13075411adf468c9c532354762ca9ce269ba00e8f"
 
