@@ -1,18 +1,15 @@
-const { readFile } = require('fs')
+const { getClientKey } = require('../util')
 const manager = require('../')
 const test = require('ava')
-const path = require('path')
-const pify = require('pify')
-
 const request = require('superagent')
 
-let discoveryKey
+let authenticationKey
 
 async function startManager() {
   try {
     await manager.configure({
       identity: 'did:ara:bfcfd4e2de84784b7d17befa561e8a448b4f502f950275b315cefa8fe9cf2e09',
-      name: 'archiver',
+      network: 'archiver',
       path: `${__dirname}/fixtures/identities`,
       keyring: `${__dirname}/fixtures/keyring`,
       password: 'c',
@@ -30,9 +27,12 @@ async function startManager() {
 
 test.before(async () => {
   await startManager()
-  const filePath = path.join(__dirname, 'fixtures/discoveryKey.txt')
-  discoveryKey = await pify(readFile)(filePath, 'utf8')
-  discoveryKey = discoveryKey.replace(/(\r\n\t|\n|\r\t)/gm, '')
+  const clientOpts = {
+    network: 'archiver',
+    keyring: `${__dirname}/fixtures/keyring.pub`,
+    secret: 'secret'
+  }
+  authenticationKey = await getClientKey(clientOpts)
 })
 
 // Status
@@ -45,7 +45,7 @@ test('Create - passphrase', async t => request
 // Create
 test('Create - passphrase', async t => request
   .post('http://localhost:8888/1.0/identifiers')
-  .set('authentication', discoveryKey)
+  .set('authentication', authenticationKey)
   .set('Content-Type', 'application/x-www-form-urlencoded')
   .send('passphrase=asdf')
   .then((res) => {
@@ -58,7 +58,7 @@ test('Create - passphrase', async t => request
 
 test('Create - no passphrase param', async t => request
   .post('http://localhost:8888/1.0/identifiers/')
-  .set('authentication', discoveryKey)
+  .set('authentication', authenticationKey)
   .set('Content-Type', 'application/x-www-form-urlencoded')
   .catch((res) => {
     t.true(400 === res.status)
@@ -66,7 +66,7 @@ test('Create - no passphrase param', async t => request
 
 test('Create - no passphrase value', async t => request
   .post('http://localhost:8888/1.0/identifiers/?passphrase=')
-  .set('authentication', discoveryKey)
+  .set('authentication', authenticationKey)
   .set('Content-Type', 'application/x-www-form-urlencoded')
   .send('passphrase=')
   .catch((res) => {
@@ -76,21 +76,21 @@ test('Create - no passphrase value', async t => request
 // Resolve
 test('Resolve - did', async t => request
   .get('http://localhost:8888/1.0/identifiers/?did=did:ara:bfcfd4e2de84784b7d17befa561e8a448b4f502f950275b315cefa8fe9cf2e09')
-  .set('authentication', discoveryKey)
+  .set('authentication', authenticationKey)
   .then((res) => {
     t.true(200 === res.status)
   }))
 
 test('Resolve - no did param', async t => request
   .get('http://localhost:8888/1.0/identifiers/')
-  .set('authentication', discoveryKey)
+  .set('authentication', authenticationKey)
   .catch((res) => {
     t.true(400 === res.status)
   }))
 
 test('Resolve - no did value', async t => request
   .get('http://localhost:8888/1.0/identifiers/?did=')
-  .set('authentication', discoveryKey)
+  .set('authentication', authenticationKey)
   .catch((res) => {
     t.true(400 === res.status)
   }))
