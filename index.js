@@ -1,8 +1,9 @@
 /* eslint-disable no-shadow */
+/* eslint-disable max-len */
 /* eslint-disable no-warning-comments */
 const { readFile, readFileSync } = require('fs')
 const { info, warn, error } = require('ara-console')
-const { unpack, keyRing } = require('ara-network/keys')
+const { unpack, keyRing, derive } = require('ara-network/keys')
 const { createChannel } = require('ara-network/discovery/channel')
 const { writeIdentity } = require('ara-identity/util')
 const { resolve } = require('path')
@@ -47,12 +48,12 @@ const conf = {
   identity: null,
   password: null,
   secret: null,
-  name: null,
+  network: null,
   keyring: null,
   sslKey: null,
   sslCert: null,
   // Authentication@ TODO : Use public network key in keyring file to validate requests
-  publicKey: null,
+  authenticationKey: null,
 }
 
 let server = null
@@ -79,7 +80,7 @@ async function configure(opts, program) {
         type: 'string',
         // required: true, // see secret@TODO
       })
-      .option('name', {
+      .option('network', {
         alias: 'n',
         describe: 'Human readable network keys name.',
         type: 'string',
@@ -110,7 +111,7 @@ async function configure(opts, program) {
     argv = program.argv
   }
   conf.port = select('port', argv, opts, conf)
-  conf.name = select('name', argv, opts, conf)
+  conf.network = select('network', argv, opts, conf)
   conf.secret = select('secret', argv, opts, conf)
   conf.keyring = select('keyring', argv, opts, conf)
   conf.identity = select('identity', argv, opts, conf)
@@ -160,21 +161,31 @@ async function start() {
   const hash = crypto.blake2b(publicKey).toString('hex')
   const path = resolve(conf.path, hash, 'keystore/ara')
   // secret@TODO: Enable & use conf.secret to perform handshake when archiving functionality added
-  // const secret = Buffer.from(conf.secret)
+
   const keystore = JSON.parse(await pify(readFile)(path, 'utf8'))
+  const secret = Buffer.from(conf.secret)
   const secretKey = ss.decrypt(keystore, { key: password.slice(0, 16) })
 
+  // Deriving Domain Keypair for authentication
+  const keypair = derive({ secretKey, name: conf.network })
+  const s = crypto.blake2b(secret, 32)
+  const bs = crypto.blake2b(keypair.secretKey, 32)
+  const seed = crypto.blake2b(Buffer.concat([ s, bs ]), 32)
+  const K = crypto.curve25519.keyPair(seed)
+
   const keyring = keyRing(conf.keyring, { secret: secretKey })
-  const buffer = await keyring.get(conf.name)
+  const buffer = await keyring.get(conf.network)
+  const unpacked = unpack({ buffer })
 
   if (!buffer.length) {
-    error(`No discoveryKey found from network key named: ${conf.name} and keyring: ${conf.keyring}.`)
+    error(`No discoveryKey found from network key named: ${conf.network} and keyring: ${conf.keyring}.`)
     error('Please try a diffrent key name (\'-n\' option) or keyring (\'-k\' option).')
   }
 
-  const unpacked = unpack({ buffer })
   const { discoveryKey } = unpacked
   info('%s: discovery key:', pkg.name, discoveryKey.toString('hex'))
+
+  conf.authenticationKey = Buffer.concat([ discoveryKey, K.publicKey ]).toString('hex')
 
   // Server
   app = express()
@@ -238,7 +249,7 @@ async function start() {
     // Use public network key (conf.publicKey) from the keyring file
 
     try {
-      if (undefined === req.headers.authentication || discoveryKey.toString('hex') !== req.headers.authentication) {
+      if (undefined === req.headers.authentication || conf.authenticationKey !== req.headers.authentication) {
         res
           .status(status.badRequest)
           .send(msg.authenticationFailed)
@@ -294,7 +305,7 @@ async function start() {
     }, REQUEST_TIMEOUT)
 
     try {
-      if (undefined === req.headers.authentication || discoveryKey.toString('hex') !== req.headers.authentication) {
+      if (undefined === req.headers.authentication || conf.authenticationKey !== req.headers.authentication) {
         res
           .status(status.badRequest)
           .send(msg.authenticationFailed)
