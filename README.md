@@ -97,7 +97,7 @@ Passphrase: [hidden]
 
 ## Authentication
 
-* For now, the server uses an `authenticationKey` combination of `discoveryKey` & `domain.publicKey` retrieved from the keyring file to validate incoming [create](#create) & [resolve](#resolver) requests
+* For now, the server uses an `authenticationKey` retrieved from the keyring file to validate incoming [create](#create) & [resolve](#resolver) requests
 * The `authenticationKey` should be set in the request header as `authentication`
 * The `authenticationKey` value can be retrieved using `getClientKey()` method under `util.js`
 * Please refer to [ara-network](https://github.com/arablocks/ara-network) to learn more about keyrings
