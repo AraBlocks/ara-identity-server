@@ -1,6 +1,6 @@
 {
   "name": "ara-network-node-identity-manager",
-  "version": "1.0.0",
+  "version": "0.1.0",
   "description": "A cryptographic key management system which exposes a http api to create Ara identities",
   "main": "index.js",
   "scripts": {
