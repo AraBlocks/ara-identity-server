@@ -135,7 +135,6 @@ async function start() {
   let password = null
   let keys = null
   let discoveryKey = null
-  let authenticationKey = null
 
   channel = createChannel({ })
 
@@ -165,11 +164,10 @@ async function start() {
   // eslint-disable-next-line prefer-destructuring
   discoveryKey = keys.discoveryKey
   // eslint-disable-next-line prefer-destructuring
-  authenticationKey = keys.authenticationKey
-  info('%s: discovery key:', pkg.name, discoveryKey.toString('hex'))
-  info('%s: authentication key:', pkg.name, authenticationKey)
+  conf.authenticationKey = keys.authenticationKey
 
-  conf.authenticationKey = authenticationKey
+  info('%s: discovery key:', pkg.name, discoveryKey.toString('hex'))
+  info('%s: authentication key:', pkg.name, conf.authenticationKey)
 
   // Server
   app = express()
