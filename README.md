@@ -265,7 +265,7 @@ ETag: W/"27-Lt/602+OsqNBpoQXD3gIgR3WfhI"
 Date: Tue, 11 Sep 2018 16:05:01 GMT
 Connection: keep-alive
 
-ara-identity-manager up and running!!!!
+Ara Identity Manager up and running. 
 ```
 
 ## Contributing
