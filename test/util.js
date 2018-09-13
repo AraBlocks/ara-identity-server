@@ -19,8 +19,8 @@ const serverOpts = {
 // Get Authentication Key
 test('util - derive authenticationKey', async (t) => {
   try {
-    const clientKey = await getClientKey(clientOpts)
-    const serverKey = await getServerKey(serverOpts)
+    const { authclientKey: clientKey } = await getClientKey(clientOpts)
+    const { authclientKey: serverKey } = await getServerKey(serverOpts)
     t.true(clientKey === serverKey)
   } catch (err) {
     throw new Error(err)

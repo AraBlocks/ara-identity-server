@@ -2,8 +2,7 @@
 /* eslint-disable max-len */
 /* eslint-disable no-warning-comments */
 const { readFile, readFileSync } = require('fs')
-const { info, warn, error } = require('ara-console')
-const { unpack, keyRing, derive } = require('ara-network/keys')
+const { info, warn } = require('ara-console')
 const { parse: parseDID } = require('did-uri')
 const { createChannel } = require('ara-network/discovery/channel')
 const { writeIdentity } = require('ara-identity/util')
@@ -21,8 +20,8 @@ const http = require('http')
 const pify = require('pify')
 const aid = require('ara-identity')
 const pkg = require('./package')
-const ss = require('ara-secret-storage')
 const rc = require('./rc')()
+const { getServerKey } = require('./util')
 
 // in milliseconds
 const REQUEST_TIMEOUT = 5000
@@ -146,47 +145,18 @@ async function start() {
           'Passphrase:'
       }
     ]))
-  } else {
-    // eslint-disable-next-line prefer-destructuring
-    password = conf.password
+    conf.password = password
   }
 
   if (0 !== conf.identity.indexOf('did:ara:')) {
     conf.identity = `did:ara:${conf.identity}`
   }
-  const did = new DID(conf.identity)
-  const publicKey = Buffer.from(did.identifier, 'hex')
 
-  password = crypto.blake2b(Buffer.from(password))
-
-  const hash = crypto.blake2b(publicKey).toString('hex')
-  const path = resolve(conf.path, hash, 'keystore/ara')
-  // secret@TODO: Enable & use conf.secret to perform handshake when archiving functionality added
-
-  const keystore = JSON.parse(await pify(readFile)(path, 'utf8'))
-  const secret = Buffer.from(conf.secret)
-  const secretKey = ss.decrypt(keystore, { key: password.slice(0, 16) })
-
-  // Deriving Domain Keypair for authentication
-  const keypair = derive({ secretKey, name: conf.network })
-  const s = crypto.blake2b(secret, 32)
-  const bs = crypto.blake2b(keypair.secretKey, 32)
-  const seed = crypto.blake2b(Buffer.concat([ s, bs ]), 32)
-  const K = crypto.curve25519.keyPair(seed)
-
-  const keyring = keyRing(conf.keyring, { secret: secretKey })
-  const buffer = await keyring.get(conf.network)
-  const unpacked = unpack({ buffer })
-
-  if (!buffer.length) {
-    error(`No discoveryKey found from network key named: ${conf.network} and keyring: ${conf.keyring}.`)
-    error('Please try a diffrent key name (\'-n\' option) or keyring (\'-k\' option).')
-  }
-
-  const { discoveryKey } = unpacked
+  const { discoveryKey, authenticationKey } = await getServerKey(conf)
   info('%s: discovery key:', pkg.name, discoveryKey.toString('hex'))
+  info('%s: authentication key:', pkg.name, authenticationKey)
 
-  conf.authenticationKey = Buffer.concat([ discoveryKey, K.publicKey ]).toString('hex')
+  conf.authenticationKey = authenticationKey
 
   // Server
   app = express()
