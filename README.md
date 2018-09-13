@@ -118,8 +118,7 @@ Returns an object:
 - `mnemonic`: 'word some thing else ...'
 - `ddo` : '{"@context": "",....}'
 
-> **Important**: Store the mnemonic in a safe, analog place; it is the only recovery mechanism for the Ara ID.
-> **Important**: Not sure if the above is true in this situation, maybe just the passphrase is necessary.
+> **Important**: Store the mnemonic in a safe, analog place; it is the only recovery mechanism for an Ara ID.
 
 ```
 $ curl -H 'authentication: <authenticationKey>' \
