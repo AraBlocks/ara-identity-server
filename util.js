@@ -119,7 +119,7 @@ async function getServerAuthKey(opts) {
     throw new TypeError('Expecting network keys secret keyring.')
   }
 
-  if (0 === opts.keyring.indexOf('.pub')) {
+  if (-1 !== opts.keyring.indexOf('.pub')) {
     debug(`Using keyring: ${opts.keyring}, which may not be a secret keyring.`)
   }
 
