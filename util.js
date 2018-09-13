@@ -1,6 +1,7 @@
 const { unpack, keyRing, derive } = require('ara-network/keys')
 const { readFile } = require('fs')
 const { resolve } = require('path')
+const { error } = require('ara-console')
 const isBuffer = require('is-buffer')
 const { DID } = require('did-uri')
 const crypto = require('ara-crypto')
@@ -8,6 +9,7 @@ const pify = require('pify')
 const ss = require('ara-secret-storage')
 const rc = require('./rc')()
 
+const DID_IDENTIFIER_LENGTH = 64
 /**
  * Returns an Authentication key derived from the public keyring file
  * @param  {object} opts
@@ -52,9 +54,18 @@ async function getClientKey(opts) {
 
     keyring.ready()
     const buffer = await keyring.get(opts.network)
+
+    if (!buffer.length) {
+      error(`No discoveryKey found from network key named: ${opts.network} and keyring: ${opts.keyring}.`)
+      error('Please try a diffrent key name (\'-n\' option) or keyring (\'-k\' option).')
+    }
+
     const unpacked = unpack({ buffer })
     const { discoveryKey } = unpacked
-    return Buffer.concat([ discoveryKey, unpacked.domain.publicKey ]).toString('hex')
+    return {
+      discoveryKey,
+      authenticationKey: Buffer.concat([ discoveryKey, unpacked.domain.publicKey ]).toString('hex')
+    }
   } catch (err) {
     return new Error(err)
   }
@@ -107,6 +118,10 @@ async function getServerKey(opts) {
   }
 
   const did = new DID(opts.identity)
+
+  if (!did.identifier || DID_IDENTIFIER_LENGTH !== did.identifier.length) {
+    throw new TypeError('Invalid DID identifier length.')
+  }
   const publicKey = Buffer.from(did.identifier, 'hex')
 
   // Read keystore/ara for the DID
@@ -129,10 +144,19 @@ async function getServerKey(opts) {
   // Derive the discoveryKey for the keyring file
   const keyring = keyRing(opts.keyring, { secret: secretKey })
   const buffer = await keyring.get(opts.network)
+
+  if (!buffer.length) {
+    error(`No discoveryKey found from network key named: ${opts.network} and keyring: ${opts.keyring}.`)
+    error('Please try a diffrent key name (\'-n\' option) or keyring (\'-k\' option).')
+  }
+
   const unpacked = unpack({ buffer })
   const { discoveryKey } = unpacked
 
-  return Buffer.concat([ discoveryKey, K.publicKey ]).toString('hex')
+  return {
+    discoveryKey,
+    authenticationKey: Buffer.concat([ discoveryKey, K.publicKey ]).toString('hex')
+  }
 }
 
 module.exports = {
