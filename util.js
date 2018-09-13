@@ -1,7 +1,7 @@
 const { unpack, keyRing, derive } = require('ara-network/keys')
 const { readFile } = require('fs')
 const { resolve } = require('path')
-const { error } = require('ara-console')
+const { debug, error } = require('ara-console')
 const isBuffer = require('is-buffer')
 const { DID } = require('did-uri')
 const crypto = require('ara-crypto')
@@ -41,7 +41,7 @@ async function getClientKey(opts) {
   }
 
   if (-1 === opts.keyring.indexOf('.pub')) {
-    throw new TypeError(`Using keyring: ${opts.keyring}, which may not be a public keyring.`)
+    debug(`Using keyring: ${opts.keyring}, which may not be a public keyring.`)
   }
 
   try {
