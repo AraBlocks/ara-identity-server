@@ -1,10 +1,11 @@
 const { unpack, keyRing, derive } = require('ara-network/keys')
 const { readFile } = require('fs')
 const { resolve } = require('path')
-const { debug, error } = require('ara-console')
+const { error } = require('ara-console')
 const isBuffer = require('is-buffer')
 const { DID } = require('did-uri')
 const crypto = require('ara-crypto')
+const debug = require('debug')('ara:network:node:identity-manager:util')
 const pify = require('pify')
 const ss = require('ara-secret-storage')
 const rc = require('./rc')()
@@ -19,7 +20,7 @@ const DID_IDENTIFIER_LENGTH = 64
  * @return {string} 64 byte authentication key
  */
 
-async function getClientKey(opts) {
+async function getClientAuthKey(opts) {
   if (null == opts || 'object' !== typeof opts) {
     throw new TypeError('Expecting options to be an object.')
   }
@@ -48,11 +49,12 @@ async function getClientKey(opts) {
     const secret = Buffer.from(opts.secret)
     const keyring = keyRing(opts.keyring, { secret })
 
-    keyring.once('error', (err) => {
+    /* keyring.once('error', (err) => {
       throw new Error(err)
-    })
+    }) */
 
     keyring.ready()
+
     const buffer = await keyring.get(opts.network)
 
     if (!buffer.length) {
@@ -83,7 +85,7 @@ async function getClientKey(opts) {
  * @return {string} 64 byte authentication key
  */
 
-async function getServerKey(opts) {
+async function getServerAuthKey(opts) {
   if (null == opts || 'object' !== typeof opts) {
     throw new TypeError('Expecting options to be an object.')
   }
@@ -117,6 +119,10 @@ async function getServerKey(opts) {
     throw new TypeError('Expecting network keys secret keyring.')
   }
 
+  if (0 === opts.keyring.indexOf('.pub')) {
+    debug(`Using keyring: ${opts.keyring}, which may not be a secret keyring.`)
+  }
+
   const did = new DID(opts.identity)
 
   if (!did.identifier || DID_IDENTIFIER_LENGTH !== did.identifier.length) {
@@ -124,42 +130,46 @@ async function getServerKey(opts) {
   }
   const publicKey = Buffer.from(did.identifier, 'hex')
 
-  // Read keystore/ara for the DID
-  const password = crypto.blake2b(Buffer.from(opts.password))
-  const hash = crypto.blake2b(publicKey).toString('hex')
-  const path = resolve(opts.path, hash, 'keystore/ara')
+  try {
+    // Read keystore/ara for the DID
+    const password = crypto.blake2b(Buffer.from(opts.password))
+    const hash = crypto.blake2b(publicKey).toString('hex')
+    const path = resolve(opts.path, hash, 'keystore/ara')
 
-  // Derive secretKey for the DID
-  const keystore = JSON.parse(await pify(readFile)(path, 'utf8'))
-  const secret = Buffer.from(opts.secret)
-  const secretKey = ss.decrypt(keystore, { key: password.slice(0, 16) })
+    // Derive secretKey for the DID
+    const keystore = JSON.parse(await pify(readFile)(path, 'utf8'))
+    const secret = Buffer.from(opts.secret)
+    const secretKey = ss.decrypt(keystore, { key: password.slice(0, 16) })
 
-  // Derive the domain keypair using the secret key
-  const keypair = derive({ secretKey, name: opts.network })
-  const s = crypto.blake2b(secret, 32)
-  const bs = crypto.blake2b(keypair.secretKey, 32)
-  const seed = crypto.blake2b(Buffer.concat([ s, bs ]), 32)
-  const K = crypto.curve25519.keyPair(seed)
+    // Derive the domain keypair using the secret key
+    const keypair = derive({ secretKey, name: opts.network })
+    const s = crypto.blake2b(secret, 32)
+    const bs = crypto.blake2b(keypair.secretKey, 32)
+    const seed = crypto.blake2b(Buffer.concat([ s, bs ]), 32)
+    const K = crypto.curve25519.keyPair(seed)
 
-  // Derive the discoveryKey for the keyring file
-  const keyring = keyRing(opts.keyring, { secret: secretKey })
-  const buffer = await keyring.get(opts.network)
+    // Derive the discoveryKey for the keyring file
+    const keyring = keyRing(opts.keyring, { secret: secretKey })
+    const buffer = await keyring.get(opts.network)
 
-  if (!buffer.length) {
-    error(`No discoveryKey found from network key named: ${opts.network} and keyring: ${opts.keyring}.`)
-    error('Please try a diffrent key name (\'-n\' option) or keyring (\'-k\' option).')
-  }
+    if (!buffer.length) {
+      error(`No discoveryKey found from network key named: ${opts.network} and keyring: ${opts.keyring}.`)
+      error('Please try a diffrent key name (\'-n\' option) or keyring (\'-k\' option).')
+    }
 
-  const unpacked = unpack({ buffer })
-  const { discoveryKey } = unpacked
+    const unpacked = unpack({ buffer })
+    const { discoveryKey } = unpacked
 
-  return {
-    discoveryKey,
-    authenticationKey: Buffer.concat([ discoveryKey, K.publicKey ]).toString('hex')
+    return {
+      discoveryKey,
+      authenticationKey: Buffer.concat([ discoveryKey, K.publicKey ]).toString('hex')
+    }
+  } catch (err) {
+    throw new Error(err)
   }
 }
 
 module.exports = {
-  getClientKey,
-  getServerKey
+  getClientAuthKey,
+  getServerAuthKey
 }

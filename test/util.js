@@ -1,4 +1,4 @@
-const { getClientKey, getServerKey } = require('../util')
+const { getClientAuthKey, getServerAuthKey } = require('../util')
 const test = require('ava')
 
 const clientOpts = {
@@ -19,8 +19,8 @@ const serverOpts = {
 // Get Authentication Key
 test('util - derive authenticationKey', async (t) => {
   try {
-    const { authclientKey: clientKey } = await getClientKey(clientOpts)
-    const { authclientKey: serverKey } = await getServerKey(serverOpts)
+    const { authenticationKey: clientKey } = await getClientAuthKey(clientOpts)
+    const { authenticationKey: serverKey } = await getServerAuthKey(serverOpts)
     t.true(clientKey === serverKey)
   } catch (err) {
     throw new Error(err)
