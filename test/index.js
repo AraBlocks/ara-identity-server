@@ -32,7 +32,9 @@ test.before(async () => {
     keyring: `${__dirname}/fixtures/keyring.pub`,
     secret: 'secret'
   }
-  authenticationKey = await getClientKey(clientOpts)
+  const keys = await getClientKey(clientOpts)
+  // eslint-disable-next-line prefer-destructuring
+  authenticationKey = keys.authenticationKey
 })
 
 // Status
