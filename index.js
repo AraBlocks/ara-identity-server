@@ -1,6 +1,7 @@
 /* eslint-disable no-shadow */
 /* eslint-disable max-len */
 /* eslint-disable no-warning-comments */
+const { getClientAuthKey, getServerAuthKey } = require('./util')
 const { readFile, readFileSync } = require('fs')
 const { info, warn } = require('ara-console')
 const { parse: parseDID } = require('did-uri')
@@ -21,7 +22,6 @@ const pify = require('pify')
 const aid = require('ara-identity')
 const pkg = require('./package')
 const rc = require('./rc')()
-const { getServerKey } = require('./util')
 
 // in milliseconds
 const REQUEST_TIMEOUT = 5000
@@ -132,7 +132,11 @@ async function start() {
   if (channel) {
     return false
   }
-  let password
+  let password = null
+  let keys = null
+  let discoveryKey = null
+  let authenticationKey = null
+
   channel = createChannel({ })
 
   if (!conf.password) {
@@ -152,7 +156,16 @@ async function start() {
     conf.identity = `did:ara:${conf.identity}`
   }
 
-  const { discoveryKey, authenticationKey } = await getServerKey(conf)
+  if (-1 !== conf.keyring.indexOf('.pub')) {
+    warn(`Using keyring: ${conf.keyring}, which may not be a secret keyring.`)
+    keys = await getClientAuthKey(conf)
+  } else {
+    keys = await getServerAuthKey(conf)
+  }
+  // eslint-disable-next-line prefer-destructuring
+  discoveryKey = keys.discoveryKey
+  // eslint-disable-next-line prefer-destructuring
+  authenticationKey = keys.authenticationKey
   info('%s: discovery key:', pkg.name, discoveryKey.toString('hex'))
   info('%s: authentication key:', pkg.name, authenticationKey)
 

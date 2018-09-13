@@ -1,4 +1,4 @@
-const { getClientKey } = require('../util')
+const { getClientAuthKey } = require('../util')
 const manager = require('../')
 const test = require('ava')
 const request = require('superagent')
@@ -32,7 +32,7 @@ test.before(async () => {
     keyring: `${__dirname}/fixtures/keyring.pub`,
     secret: 'secret'
   }
-  const keys = await getClientKey(clientOpts)
+  const keys = await getClientAuthKey(clientOpts)
   // eslint-disable-next-line prefer-destructuring
   authenticationKey = keys.authenticationKey
 })
