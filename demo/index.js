@@ -1,3 +1,8 @@
+function prettyPrint(stringifiedJSON) {
+  const response = JSON.parse(stringifiedJSON)
+  return JSON.stringify(response, null, 2)
+}
+
 const createSubmit = document.getElementById('createSubmit')
 
 const createForm = document.getElementById('post')
@@ -13,13 +18,18 @@ createForm.addEventListener('submit', (event) => {
   request.onload = () => {
     const response = document.createElement('pre')
     response.innerText = request.responseText
+
     const responseContainer = document.getElementById('responses')
-    responseContainer.prepend(response)
+    responseContainer.prepend(prettyPrint(response))
+
     document.getElementById('passphrase').value = ''
     console.log('passphrase.value ____ ::', passphrase.value)
   }
 
   request.onerror = (err) => {
+    const error = JSON.stringify({ Error: err })
+    const responseContainer = document.getElementById('responses')
+    responseContainer.prepend(prettyPrint(error))
     console.log('error ____ ::', err)
   }
 
@@ -39,12 +49,17 @@ resolveForm.addEventListener('submit', (event) => {
   request.onload = () => {
     const response = document.createElement('pre')
     response.innerText = request.responseText
+
     const responseContainer = document.getElementById('responses')
-    responseContainer.prepend(response)
+    responseContainer.prepend(prettyPrint(response))
+
     document.getElementById('did').value = ''
   }
 
   request.onerror = (err) => {
+    const error = JSON.stringify({ Error: err })
+    const responseContainer = document.getElementById('responses')
+    responseContainer.prepend(prettyPrint(error))
     console.log('error ____ ::', err)
   }
 
