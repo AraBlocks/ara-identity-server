@@ -28,6 +28,8 @@ const REQUEST_TIMEOUT = 5000
 
 const appRoute = '/1.0/identifiers'
 
+const domain = 'http://34.238.159.205:8888'
+
 const status = {
   internalServerError: 500,
   requestTimeout: 408,
@@ -221,6 +223,7 @@ async function start() {
   }
 
   async function oncreate(req, res) {
+    res.setHeader('Access-Control-Allow-Origin', domain)
     const timer = setTimeout(() => {
       res
         .status(status.requestTimeout)
@@ -280,6 +283,7 @@ async function start() {
   }
 
   async function onresolve(req, res) {
+    res.setHeader('Access-Control-Allow-Origin', domain)
     const now = Date.now()
 
     const timer = setTimeout(() => {
