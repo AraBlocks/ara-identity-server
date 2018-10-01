@@ -174,9 +174,9 @@ async function start() {
   // Server
   app = express()
 
-  app.use(function(req, res, next) {
+  app.use((req, res, next) => {
     res.header('Access-Control-Allow-Origin', domain)
-    res.header('Access-Control-Allow-Headers','Authentication, Content-Type')
+    res.header('Access-Control-Allow-Headers', 'Authentication, Content-Type')
     next()
   })
 

@@ -1,3 +1,6 @@
+/* eslint-disable no-undef */
+/* eslint-disable no-console */
+
 const domain = 'http://34.238.159.205:8000'
 const appRoute = '1.0/identifiers'
 const authToken = 'authToken'
@@ -12,8 +15,6 @@ function prettyPrint(stringifiedJSON) {
 
   return JSON.stringify(response, null, 2)
 }
-
-const createSubmit = document.getElementById('createSubmit')
 
 const createForm = document.getElementById('post')
 createForm.addEventListener('submit', (event) => {
