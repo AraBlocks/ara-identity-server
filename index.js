@@ -173,6 +173,13 @@ async function start() {
 
   // Server
   app = express()
+
+  app.use(function(req, res, next) {
+    res.header('Access-Control-Allow-Origin', domain)
+    res.header('Access-Control-Allow-Headers','Authentication, Content-Type')
+    next()
+  })
+
   app.use(bodyParser.urlencoded({ extended: true }))
 
   app.post(`${appRoute}/`, oncreate)
