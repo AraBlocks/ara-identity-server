@@ -49,6 +49,7 @@
   },
   "devDependencies": {
     "ava": "^0.25.0",
+    "conventional-changelog-cli": "^2.0.5",
     "eslint": "^4.19.1",
     "eslint-config-ara": "arablocks/eslint-config-ara#semver:^2.1.1",
     "eslint-plugin-import": "^2.12.0"
