@@ -3,7 +3,15 @@
 
 const domain = 'http://34.238.159.205:8000'
 const appRoute = '1.0/identifiers'
-const authToken = 'authToken'
+const { getClientAuthKey } = require('ara-identity-server/util')
+
+const { authenticationKey } = getClientAuthKey({
+      identity: 'e67f213c57a8178ea46d166af9429aee8c1ce44f072c42ab5ad9c49fa7c65031',
+      password: 'manager'
+      secret: 'identity-manager',
+      network: 'manager',
+      keyring: '/home/ubuntu/.ara/keyrings/ara-manager',
+    })
 
 function prettyPrint(stringifiedJSON) {
   let response
@@ -25,7 +33,7 @@ createForm.addEventListener('submit', (event) => {
   const request = new XMLHttpRequest()
   const url = `${domain}/${appRoute}/`
   request.open('POST', url)
-  request.setRequestHeader('Authentication', authToken)
+  request.setRequestHeader('Authentication', authenticationKey)
   request.setRequestHeader('Content-type', 'application/x-www-form-urlencoded')
 
   request.onload = () => {
@@ -57,7 +65,7 @@ resolveForm.addEventListener('submit', (event) => {
   const request = new XMLHttpRequest()
   const url = `${domain}/${appRoute}/?did=${did}`
   request.open('GET', url)
-  request.setRequestHeader('authentication', authToken)
+  request.setRequestHeader('authentication', authenticationKey)
 
   request.onload = () => {
     const response = document.createElement('pre')
