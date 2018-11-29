@@ -1,12 +1,14 @@
 <img src="https://github.com/arablocks/ara-module-template/blob/master/ara.png" width="30" height="30" /> ara-identity-server
 ========
 
+> **Important**: `mount.sh` must be removed from git history before making this repo public.
+
 [![Build Status](https://travis-ci.com/AraBlocks/ara-network-node-identity-manager.svg?token=6WjTyCg41y8MBmCzro5x&branch=master)](https://travis-ci.com/AraBlocks/ara-network-node-identity-manager)
 
 A cryptographic key management system which exposes a http api to create Ara identities.
 
 ## Status
-**WIP**
+**Stable**
 
 ## Dependencies
 - [Node](https://nodejs.org/en/download/)
