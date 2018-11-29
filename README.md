@@ -99,7 +99,7 @@ Passphrase: [hidden]
 
 * For now, the server uses an `authenticationKey` retrieved from the keyring file to validate incoming [create](#create) & [resolve](#resolver) requests
 * It should be set in the request header as `authentication`
-* The `authenticationKey` value can be retrieved using `getClientKey()` method under `util.js`
+* The `authenticationKey` value can be retrieved using [`getClientAuthKey()`](https://github.com/AraBlocks/ara-identity-server/blob/master/util.js#L23) method in `util.js`
 * Please refer to [ara-network](https://github.com/arablocks/ara-network) to learn more about keyrings
 
 ## API
