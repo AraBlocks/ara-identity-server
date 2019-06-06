@@ -63,3 +63,4 @@ package-lock.json
 
 .DS_Store
 mount.sh
+mount.in
