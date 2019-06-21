@@ -19,6 +19,7 @@ const debug = require('debug')('ara:network:node:identity-manager')
 const https = require('https')
 const http = require('http')
 const pify = require('pify')
+const util = require('ara-util')
 const aid = require('ara-identity')
 const pkg = require('./package')
 const rc = require('./rc')()
@@ -265,12 +266,16 @@ async function start() {
           context,
           password: req.body.passphrase
         })
-        const did = `did:ara:${identifier.publicKey.toString('hex')}`
         await writeIdentity(identifier)
+
+        const did = `did:ara:${identifier.publicKey.toString('hex')}`
+        const walletAddress = await util.getAddressFromDID(did)
+
         const response = {
           did,
           mnemonic: identifier.mnemonic,
-          ddo: identifier.ddo
+          ddo: identifier.ddo,
+          walletAddress
         }
         info('%s: New Identity created successfully: %s', pkg.name, did)
 
