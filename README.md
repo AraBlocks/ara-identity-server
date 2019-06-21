@@ -119,6 +119,7 @@ Returns an object:
 - `did`: 'did:ara:abc123...'
 - `mnemonic`: 'word some thing else ...'
 - `ddo` : '{"@context": "",....}'
+- `walletAddress` : '0x30ff0edf64a015e8d412ec9427415f2d23117078'
 
 > **Important**: Store the mnemonic in a safe, analog place; it is the only recovery mechanism for an Ara ID.
 
@@ -163,7 +164,8 @@ Content-Length: 177
           "publicKeyHex" : "f68227cd68522794942a78635362223f274433402caf67e6476bec6609060265"
         }
       ]
-    }
+    },
+  "walletAddress" : "0x30ff0edf64a015e8d412ec9427415f2d23117078"
 }
 
 ```
@@ -267,7 +269,7 @@ ETag: W/"27-Lt/602+OsqNBpoQXD3gIgR3WfhI"
 Date: Tue, 11 Sep 2018 16:05:01 GMT
 Connection: keep-alive
 
-Ara Identity Manager up and running. 
+Ara Identity Manager up and running.
 ```
 
 ## Contributing
