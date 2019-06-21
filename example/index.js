@@ -3,7 +3,8 @@
 
 const domain = 'http://34.238.159.205:8000'
 const appRoute = '1.0/identifiers'
-const authToken = 'authToken' // derived using `https://github.com/AraBlocks/ara-identity-server/blob/master/util.js#L23`
+// derived using `https://github.com/AraBlocks/ara-identity-server/blob/master/util.js#L23`
+const authToken = 'authToken'
 
 function prettyPrint(stringifiedJSON) {
   let response
