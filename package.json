@@ -29,14 +29,15 @@
   },
   "homepage": "https://github.com/AraBlocks/ara-identity-server#readme",
   "dependencies": {
-    "ara-console": "arablocks/ara-console#semver:0.2.x",
-    "ara-context": "arablocks/ara-context#semver:0.6.x",
-    "ara-crypto": "arablocks/ara-crypto#semver:0.8.x",
-    "ara-identity": "arablocks/ara-identity#semver:0.62.x",
-    "ara-network": "arablocks/ara-network#semver:1.3.x",
-    "ara-runtime-configuration": "arablocks/ara-runtime-configuration#semver:1.3.x",
-    "ara-secret-storage": "arablocks/ara-secret-storage#semver:0.1.x",
-    "ara-util": "arablocks/ara-util#semver:1.3.x",
+    "ara-console": "github:arablocks/ara-console#semver:0.2.x",
+    "ara-context": "github:arablocks/ara-context#semver:0.6.x",
+    "ara-contracts": "github:araBlocks/ara-contracts#semver:0.25.x",
+    "ara-crypto": "github:arablocks/ara-crypto#semver:0.8.x",
+    "ara-identity": "github:arablocks/ara-identity#semver:0.62.x",
+    "ara-network": "github:arablocks/ara-network#semver:1.3.x",
+    "ara-runtime-configuration": "github:arablocks/ara-runtime-configuration#semver:1.3.x",
+    "ara-secret-storage": "github:arablocks/ara-secret-storage#semver:0.1.x",
+    "ara-util": "github:arablocks/ara-util#semver:1.3.x",
     "body-parser": "^1.18.3",
     "debug": "^3.1.0",
     "defined": "^1.0.0",
@@ -46,13 +47,14 @@
     "inquirer": "^6.1.0",
     "is-buffer": "^2.0.2",
     "pify": "^3.0.0",
+    "redis": "^2.8.0",
     "superagent": "^3.8.3"
   },
   "devDependencies": {
     "ava": "^0.25.0",
     "conventional-changelog-cli": "^2.0.5",
     "eslint": "^4.19.1",
-    "eslint-config-ara": "arablocks/eslint-config-ara#semver:^2.1.1",
+    "eslint-config-ara": "github:arablocks/eslint-config-ara#semver:^2.1.1",
     "eslint-plugin-import": "^2.12.0"
   }
 }
