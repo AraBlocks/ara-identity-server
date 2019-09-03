@@ -9,12 +9,14 @@ const { createChannel } = require('ara-network/discovery/channel')
 const { writeIdentity } = require('ara-identity/util')
 const { resolve } = require('path')
 const bodyParser = require('body-parser')
+const { token } = require('ara-contracts')
 const inquirer = require('inquirer')
 const coalesce = require('defined')
 const context = require('ara-context')()
 const { DID } = require('did-uri')
 const express = require('express')
 const crypto = require('ara-crypto')
+const redis = require('redis')
 const debug = require('debug')('ara:network:node:identity-manager')
 const https = require('https')
 const http = require('http')
@@ -38,6 +40,7 @@ const status = {
   badRequest: 400,
   notFound: 404,
   ok: 200,
+  authenticationError : 401
 }
 
 const msg = {
@@ -58,7 +61,7 @@ const conf = {
   // Authentication@ TODO : Use public network key in keyring file to validate requests
   authenticationKey: null,
 }
-
+let redisClient = null
 let server = null
 let channel = null
 let app = null
@@ -140,6 +143,15 @@ async function start() {
   let discoveryKey = null
 
   channel = createChannel({ })
+  redisClient = redis.createClient()
+
+  redisClient.on('connect', function() {
+    info('Redis client connected');
+  })
+
+  redisClient.on('error', function (err) {
+    info('Something went wrong ' + err);
+  })
 
   if (!conf.password) {
     ({ password } = await inquirer.prompt([
@@ -185,6 +197,10 @@ async function start() {
 
   app.post(`${appRoute}/`, oncreate)
   app.get(`${appRoute}/`, onresolve)
+  app.get(`${appRoute}/:did/balance`, onbalance)
+  app.post(`${appRoute}/:did/transfer`, ontransfer)
+  app.post(`${appRoute}/:did/redeem`, onredeem)
+
   app.get(`${appRoute}/status`, onstatus)
 
   app.all(`${appRoute}/update/`, (req, res) => {
@@ -243,7 +259,7 @@ async function start() {
     try {
       if (undefined === req.headers.authentication || conf.authenticationKey !== req.headers.authentication) {
         res
-          .status(status.badRequest)
+          .status(status.authenticationError)
           .send(msg.authenticationFailed)
           .end()
         clearTimeout(timer)
@@ -269,8 +285,11 @@ async function start() {
         await writeIdentity(identifier)
 
         const did = `did:ara:${identifier.publicKey.toString('hex')}`
+        await aid.archive(identifier, { password: req.body.passphrase })
+        info("Archiving complete for ", did)
         const walletAddress = await util.getAddressFromDID(did)
 
+        redisClient.set(did, 0, 'EX', 60, (err, res)=> { info(res) })
         const response = {
           did,
           mnemonic: identifier.mnemonic,
@@ -305,7 +324,7 @@ async function start() {
     try {
       if (undefined === req.headers.authentication || conf.authenticationKey !== req.headers.authentication) {
         res
-          .status(status.badRequest)
+          .status(status.authenticationError)
           .send(msg.authenticationFailed)
           .end()
         clearTimeout(timer)
@@ -350,11 +369,152 @@ async function start() {
         }
       }
     } catch (err) {
+      console.log(err)
       res
         .status(status.internalServerError)
         .send(`Could not resolve DID: ${req.query.did}\n`)
         .end()
       debug(status.internalServerError, err)
+      clearTimeout(timer)
+    }
+  }
+
+  async function onbalance(req, res) {
+    const timer = setTimeout(() => {
+      res
+        .status(status.requestTimeout)
+        .send(msg.requestTimeout)
+    }, REQUEST_TIMEOUT)
+
+    try {
+      if (undefined === req.headers.authentication || conf.authenticationKey !== req.headers.authentication) {
+        res
+          .status(status.authenticationError)
+          .send(msg.authenticationFailed)
+          .end()
+        clearTimeout(timer)
+      } else {
+        if (0 !== req.params.did.indexOf('did:ara:')) {
+          req.params.did = `did:ara:${req.query.did}`
+        }
+        res.status(status.ok)
+        info('%s: Balance request for', req.params.did)
+        const did = req.params.did
+        let balance = null
+        redisClient.get(did, async function (err, bal) {
+          if ( bal == null ) {
+            info("Balance expired, retrieving from blockchain")
+            balance = await token.balanceOf(did)
+            redisClient.set(did, balance, 'EX', 60, (err, res)=> { info(res) })
+          } else {
+            balance = bal
+          }
+          res.setHeader('Content-Type', 'application/json')
+          res.end(JSON.stringify({ balance }))
+          res.on('finish', () => { clearTimeout(timer) })
+          info('%s: Balance request completed successfully!!!!', pkg.name)
+        })
+      }
+    } catch (err) {
+      console.log(err)
+      res
+        .status(status.internalServerError)
+        .send('Balance request failed. \n')
+        .end()
+      debug(err)
+      clearTimeout(timer)
+    }
+  }
+
+  async function ontransfer(req, res) {
+    const timer = setTimeout(() => {
+      res
+        .status(status.requestTimeout)
+        .send(msg.requestTimeout)
+    }, REQUEST_TIMEOUT)
+
+    try {
+      if (undefined === req.headers.authentication || conf.authenticationKey !== req.headers.authentication) {
+        res
+          .status(status.authenticationError)
+          .send(msg.authenticationFailed)
+          .end()
+        clearTimeout(timer)
+      } else {
+        if (0 !== req.params.did.indexOf('did:ara:')) {
+          req.params.did = `did:ara:${req.query.did}`
+        }
+        res.status(status.ok)
+        info('%s: Transfer request for', req.params.did)
+        const recipient = req.params.did
+        const tokens = req.body.tokens
+
+        const receipt = token.transfer({
+          did: 'did:ara:89b83d3deab9507889710bb5dbaf5e863435c05193dcb128f6488e0bd42a492b',
+          password: 'Reve!!er',
+          to: recipient,
+          val: tokens
+        })
+
+        res.setHeader('Content-Type', 'application/json')
+        res.end()
+        res.on('finish', () => { clearTimeout(timer) })
+        info('%s: Transfer request submitted successfully!!!!', pkg.name)
+      }
+    } catch (err) {
+      warn(err)
+      res
+        .status(status.internalServerError)
+        .send('Transfer request failed. \n')
+        .end()
+      debug(err)
+      clearTimeout(timer)
+    }
+  }
+
+  async function onredeem(req, res) {
+    const timer = setTimeout(() => {
+      res
+        .status(status.requestTimeout)
+        .send(msg.requestTimeout)
+    }, REQUEST_TIMEOUT)
+
+    try {
+      if (undefined === req.headers.authentication || conf.authenticationKey !== req.headers.authentication) {
+        res
+          .status(status.authenticationError)
+          .send(msg.authenticationFailed)
+          .end()
+        clearTimeout(timer)
+      } else {
+        if (0 !== req.params.did.indexOf('did:ara:')) {
+          req.params.did = `did:ara:${req.query.did}`
+        }
+        res.status(status.ok)
+        info('%s: Transfer request for', req.params.did)
+        const recipient = 'did:ara:89b83d3deab9507889710bb5dbaf5e863435c05193dcb128f6488e0bd42a492b'
+        const tokens = req.body.tokens
+        const password = req.body.passphrase
+
+        const receipt = token.transfer({
+          did: req.params.did,
+          password,
+          to: recipient,
+          val: tokens
+        })
+
+        res.setHeader('Content-Type', 'application/json')
+        res.end()
+        res.on('finish', () => { clearTimeout(timer) })
+        info('%s: Redeem request submitted successfully!!!!', pkg.name)
+      }
+    } catch (err) {
+      warn(err)
+      res
+        .status(status.internalServerError)
+        .send('Transfer request failed. \n')
+        .end()
+      debug(err)
       clearTimeout(timer)
     }
   }
