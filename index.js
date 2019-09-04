@@ -427,19 +427,12 @@ async function start() {
   }
 
   async function ontransfer(req, res) {
-    const timer = setTimeout(() => {
-      res
-        .status(status.requestTimeout)
-        .send(msg.requestTimeout)
-    }, REQUEST_TIMEOUT)
-
     try {
       if (undefined === req.headers.authentication || conf.authenticationKey !== req.headers.authentication) {
         res
           .status(status.authenticationError)
           .send(msg.authenticationFailed)
           .end()
-        clearTimeout(timer)
       } else {
         if (0 !== req.params.did.indexOf('did:ara:')) {
           req.params.did = `did:ara:${req.query.did}`
@@ -449,7 +442,7 @@ async function start() {
         const recipient = req.params.did
         const tokens = req.body.tokens
 
-        const receipt = token.transfer({
+        const receipt = await token.transfer({
           did: 'did:ara:89b83d3deab9507889710bb5dbaf5e863435c05193dcb128f6488e0bd42a492b',
           password: 'Reve!!er',
           to: recipient,
@@ -457,8 +450,7 @@ async function start() {
         })
 
         res.setHeader('Content-Type', 'application/json')
-        res.end()
-        res.on('finish', () => { clearTimeout(timer) })
+        res.end(JSON.stringify(receipt))
         info('%s: Transfer request submitted successfully!!!!', pkg.name)
       }
     } catch (err) {
@@ -468,7 +460,6 @@ async function start() {
         .send('Transfer request failed. \n')
         .end()
       debug(err)
-      clearTimeout(timer)
     }
   }
 
