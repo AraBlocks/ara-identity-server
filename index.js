@@ -29,6 +29,9 @@ const rc = require('./rc')()
 // in milliseconds
 const REQUEST_TIMEOUT = 5000
 
+const DEFAULT_TOKEN_COUNT = 100
+const MAX_TOKEN_PER_ACCOUNT = 500
+
 const appRoute = '/1.0/identifiers'
 
 const domain = 'http://mrmanager.ara.one'
@@ -103,16 +106,6 @@ async function configure(opts, program) {
         describe: 'Port for network node to listen on.',
         type: 'number'
       })
-      .option('sslKey', {
-        alias: 'K',
-        describe: 'Path to ssl key file for the server',
-        type: 'string',
-      })
-      .option('sslCert', {
-        alias: 'C',
-        describe: 'Path to ssl certificate file for the server',
-        type: 'string',
-      })
       // eslint-disable-next-line prefer-destructuring
     argv = program.argv
   }
@@ -153,6 +146,9 @@ async function start() {
     info('Something went wrong ' + err);
   })
 
+  await context.ready()
+  const { web3 } = context
+
   if (!conf.password) {
     ({ password } = await inquirer.prompt([
       {
@@ -181,8 +177,8 @@ async function start() {
   // eslint-disable-next-line prefer-destructuring
   conf.authenticationKey = keys.authenticationKey
 
-  info('%s: discovery key:', pkg.name, discoveryKey.toString('hex'))
-  info('%s: authentication key:', pkg.name, conf.authenticationKey)
+  debug('%s: discovery key:', pkg.name, discoveryKey.toString('hex'))
+  debug('%s: authentication key:', pkg.name, conf.authenticationKey)
 
   // Server
   app = express()
@@ -195,10 +191,10 @@ async function start() {
 
   app.use(bodyParser.urlencoded({ extended: true }))
 
-  app.post(`${appRoute}/`, oncreate)
-  app.get(`${appRoute}/`, onresolve)
-  app.get(`${appRoute}/:did/balance`, onbalance)
-  app.post(`${appRoute}/:did/transfer`, ontransfer)
+  app.post(`${appRoute}/`, authenticate, oncreate)
+  app.get(`${appRoute}/:did`, authenticate, onresolve)
+  app.get(`${appRoute}/:did/balance`, authenticate, onbalance)
+  app.post(`${appRoute}/:did/transfer`, authenticate, ontransfer)
   app.post(`${appRoute}/:did/redeem`, onredeem)
 
   app.get(`${appRoute}/status`, onstatus)
@@ -215,21 +211,9 @@ async function start() {
       .send('`delete` not implemented. \n')
   })
 
-  if (conf.sslCert && conf.sslKey) {
-    const certOpts = {
-      key: readFileSync(resolve(conf.sslKey)),
-      cert: readFileSync(resolve(conf.sslCert))
-    }
-    server = https.createServer(certOpts, app)
-    info('Creating an _https_ server.')
-  } else if (conf.sslCert || conf.sslKey) {
-    warn('`sslCert` and `sslKey` are required for an https server. Only one was provided.')
-    warn('Creating an _http_ server.')
-    server = http.createServer(app)
-  } else {
-    info('Creating an _http_ server.')
-    server = http.createServer(app)
-  }
+
+  debug('Creating an _http_ server.')
+  server = http.createServer(app)
 
   server.listen(conf.port, onlisten)
   server.once('error', (err) => {
@@ -237,6 +221,19 @@ async function start() {
   })
 
   return true
+
+  async function authenticate(req, res, next) {
+    let ip = req.headers['x-forwarded-for'] || req.connection.remoteAddress
+    info('%s: Received request from', pkg.name, ip)
+    if (undefined === req.headers.authentication || conf.authenticationKey !== req.headers.authentication) {
+      res
+        .status(status.authenticationError)
+        .send(msg.authenticationFailed)
+        .end()
+    } else {
+      return next()
+    }
+  }
 
   async function onstatus(req, res) {
     info('%s: Status ping received', pkg.name)
@@ -253,26 +250,17 @@ async function start() {
         .send(msg.requestTimeout)
     }, REQUEST_TIMEOUT)
 
-    // Authentication @TODO - Add Authentication mechanism to validate requests
-    // Use public network key (conf.publicKey) from the keyring file
-
     try {
-      if (undefined === req.headers.authentication || conf.authenticationKey !== req.headers.authentication) {
-        res
-          .status(status.authenticationError)
-          .send(msg.authenticationFailed)
-          .end()
-        clearTimeout(timer)
-      } else if (undefined === req.body.passphrase) {
+      if (undefined === req.body.passphrase) {
         res
           .status(status.badRequest)
-          .send('Missing Passphrase parameter. Try `?passphrase=somepassphrase` \n')
+          .send('Missing Passphrase parameter.\n')
           .end()
         clearTimeout(timer)
       } else if ('' === req.body.passphrase) {
         res
           .status(status.badRequest)
-          .send('Missing Passphrase parameter value. Try `?passphrase=somepassphrase` \n')
+          .send('Missing Passphrase parameter value.\n')
           .end()
         clearTimeout(timer)
       } else {
@@ -285,11 +273,17 @@ async function start() {
         await writeIdentity(identifier)
 
         const did = `did:ara:${identifier.publicKey.toString('hex')}`
-        await aid.archive(identifier, { password: req.body.passphrase })
-        info("Archiving complete for ", did)
         const walletAddress = await util.getAddressFromDID(did)
 
-        redisClient.set(did, 0, 'EX', 60, (err, res)=> { info(res) })
+        // Write Entry into Redis Store
+        redisClient.set(did, 0, 'EX', 60, (err, res) => {
+          if (err) {
+            debug(err)
+          } else {
+            debug(res)
+          }
+        })
+
         const response = {
           did,
           mnemonic: identifier.mnemonic,
@@ -322,57 +316,37 @@ async function start() {
     }, REQUEST_TIMEOUT)
 
     try {
-      if (undefined === req.headers.authentication || conf.authenticationKey !== req.headers.authentication) {
-        res
-          .status(status.authenticationError)
-          .send(msg.authenticationFailed)
-          .end()
-        clearTimeout(timer)
-      } else if (undefined === req.query.did) {
-        res
-          .status(status.badRequest)
-          .send('Missing DID parameter. Try `?did=did:ara:somedid` \n')
-          .end()
-        clearTimeout(timer)
-      } else if ('' === req.query.did) {
-        res
-          .status(status.badRequest)
-          .send('Missing DID parameter value. Try `?did=did:ara:somedid` \n')
-          .end()
-        // clearTimeout(timer)
-      } else {
-        if (0 !== req.query.did.indexOf('did:ara:')) {
-          req.query.did = `did:ara:${req.query.did}`
-        }
-        res.status(status.ok)
-        info('%s: Resolve request received for: %s', pkg.name, req.query.did)
+      if (0 !== req.params.did.indexOf('did:ara:')) {
+        req.params.did = `did:ara:${req.query.did}`
+      }
+      res.status(status.ok)
+      info('%s: Resolve request received for: %s', pkg.name, req.params.did)
 
-        try {
-          const did = new DID(req.query.did)
-          const publicKey = Buffer.from(did.identifier, 'hex')
-          const hash = crypto.blake2b(publicKey).toString('hex')
-          const path = resolve(conf.path, hash, 'ddo.json')
-          const ddo = JSON.parse(await pify(readFile)(path, 'utf8'))
-          const duration = Date.now() - now
-          const response = createResponse({ did, ddo, duration })
-          res.setHeader('Content-Type', 'application/json')
-          res.end(JSON.stringify(response))
-          res.on('finish', () => { clearTimeout(timer) })
-          info('%s: Resolve request completed successfully!!!!', pkg.name)
-        } catch (e) {
-          res
-            .status(status.notFound)
-            .send(`Could not resolve DID: ${req.query.did}\n`)
-            .end()
-          debug(status.notFound, e)
-          clearTimeout(timer)
-        }
+      try {
+        const did = new DID(req.params.did)
+        const publicKey = Buffer.from(did.identifier, 'hex')
+        const hash = crypto.blake2b(publicKey).toString('hex')
+        const path = resolve(conf.path, hash, 'ddo.json')
+        const ddo = JSON.parse(await pify(readFile)(path, 'utf8'))
+        const duration = Date.now() - now
+        const response = createResponse({ did, ddo, duration })
+        res.setHeader('Content-Type', 'application/json')
+        res.end(JSON.stringify(response))
+        res.on('finish', () => { clearTimeout(timer) })
+        debug('%s: Resolve request completed successfully.', pkg.name)
+      } catch (e) {
+        res
+          .status(status.notFound)
+          .send(`Could not resolve DID: ${req.params.did}\n`)
+          .end()
+        debug(status.notFound, e)
+        clearTimeout(timer)
       }
     } catch (err) {
       console.log(err)
       res
         .status(status.internalServerError)
-        .send(`Could not resolve DID: ${req.query.did}\n`)
+        .send(`Could not resolve DID: ${req.params.did}\n`)
         .end()
       debug(status.internalServerError, err)
       clearTimeout(timer)
@@ -387,34 +361,32 @@ async function start() {
     }, REQUEST_TIMEOUT)
 
     try {
-      if (undefined === req.headers.authentication || conf.authenticationKey !== req.headers.authentication) {
-        res
-          .status(status.authenticationError)
-          .send(msg.authenticationFailed)
-          .end()
-        clearTimeout(timer)
-      } else {
-        if (0 !== req.params.did.indexOf('did:ara:')) {
-          req.params.did = `did:ara:${req.query.did}`
-        }
-        res.status(status.ok)
-        info('%s: Balance request for', req.params.did)
-        const did = req.params.did
-        let balance = null
-        redisClient.get(did, async function (err, bal) {
-          if ( bal == null ) {
-            info("Balance expired, retrieving from blockchain")
-            balance = await token.balanceOf(did)
-            redisClient.set(did, balance, 'EX', 60, (err, res)=> { info(res) })
-          } else {
-            balance = bal
-          }
-          res.setHeader('Content-Type', 'application/json')
-          res.end(JSON.stringify({ balance }))
-          res.on('finish', () => { clearTimeout(timer) })
-          info('%s: Balance request completed successfully!!!!', pkg.name)
-        })
+      if (0 !== req.params.did.indexOf('did:ara:')) {
+        req.params.did = `did:ara:${req.query.did}`
       }
+      res.status(status.ok)
+      info('%s: Balance request for %s', pkg.name, req.params.did)
+      const did = req.params.did
+      let balance = null
+      redisClient.get(did, async function (err, bal) {
+        if ( bal == null ) {
+          debug("Balance expired, retrieving from blockchain")
+          balance = await token.balanceOf(did)
+          redisClient.set(did, balance, 'EX', 60, (err, res) => {
+            if (err) {
+              debug(err)
+            } else {
+              debug(res)
+            }
+          })
+        } else {
+          balance = bal
+        }
+        res.setHeader('Content-Type', 'application/json')
+        res.end(JSON.stringify({ balance }))
+        res.on('finish', () => { clearTimeout(timer) })
+        debug('%s: Balance request completed successfully.', pkg.name)
+      })
     } catch (err) {
       console.log(err)
       res
@@ -427,32 +399,33 @@ async function start() {
   }
 
   async function ontransfer(req, res) {
+    const now = new Date()
+
     try {
-      if (undefined === req.headers.authentication || conf.authenticationKey !== req.headers.authentication) {
-        res
-          .status(status.authenticationError)
-          .send(msg.authenticationFailed)
-          .end()
-      } else {
-        if (0 !== req.params.did.indexOf('did:ara:')) {
-          req.params.did = `did:ara:${req.query.did}`
-        }
-        res.status(status.ok)
-        info('%s: Transfer request for', req.params.did)
-        const recipient = req.params.did
-        const tokens = req.body.tokens
-
-        const receipt = await token.transfer({
-          did: 'did:ara:89b83d3deab9507889710bb5dbaf5e863435c05193dcb128f6488e0bd42a492b',
-          password: 'Reve!!er',
-          to: recipient,
-          val: tokens
-        })
-
-        res.setHeader('Content-Type', 'application/json')
-        res.end(JSON.stringify(receipt))
-        info('%s: Transfer request submitted successfully!!!!', pkg.name)
+      if (0 !== req.params.did.indexOf('did:ara:')) {
+        req.params.did = `did:ara:${req.query.did}`
       }
+      res.status(status.ok)
+      info('%s: Transfer request for', pkg.name, req.params.did)
+      const recipient = req.params.did
+      const tokens = req.body.tokens || DEFAULT_TOKEN_COUNT
+
+      token.transfer({
+        did: process.env.DID,
+        password: process.env.pwd,
+        to: recipient,
+        val: tokens
+      }).then((data) => {
+        info(JSON.stringify(data))
+      })
+
+      res.setHeader('Content-Type', 'application/json')
+      res.end(JSON.stringify({
+        created_at: now,
+        did: recipient,
+        tokens_requested: tokens
+      }))
+      info('%s: Transfer request submitted successfully.', pkg.name)
     } catch (err) {
       warn(err)
       res
@@ -532,7 +505,7 @@ async function start() {
 
   function announce() {
     const { port } = server.address()
-    info('identity-manager: Announcing %s on port %s', discoveryKey.toString('hex'), port)
+    debug('identity-manager: Announcing %s on port %s', discoveryKey.toString('hex'), port)
     channel.join(discoveryKey, port)
   }
 }
