@@ -405,11 +405,16 @@ async function start() {
       if (0 !== req.params.did.indexOf('did:ara:')) {
         req.params.did = `did:ara:${req.query.did}`
       }
-      res.status(status.ok)
+      // Check Balance before processing Transfer request
+
       info('%s: Transfer request for', pkg.name, req.params.did)
       const recipient = req.params.did
       const tokens = req.body.tokens || DEFAULT_TOKEN_COUNT
-
+      let balance = await token.balanceOf(did)
+      if ((balance + tokens) > MAX_TOKEN_PER_ACCOUNT) {
+        res.status(status.ok)
+        res.end(`Cannot transfer tokens. Only ${MAX_TOKEN_PER_ACCOUNT} allowed per user`)
+      }
       token.transfer({
         did: process.env.DID,
         password: process.env.pwd,
@@ -419,6 +424,7 @@ async function start() {
         info(JSON.stringify(data))
       })
 
+      res.status(status.ok)
       res.setHeader('Content-Type', 'application/json')
       res.end(JSON.stringify({
         created_at: now,
