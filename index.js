@@ -2,7 +2,7 @@
 /* eslint-disable max-len */
 /* eslint-disable no-warning-comments */
 const { getClientAuthKey, getServerAuthKey } = require('./util')
-const { readFile, readFileSync } = require('fs')
+const { readFile } = require('fs')
 const { info, warn } = require('ara-console')
 const { parse: parseDID } = require('did-uri')
 const { createChannel } = require('ara-network/discovery/channel')
@@ -18,7 +18,6 @@ const express = require('express')
 const crypto = require('ara-crypto')
 const redis = require('redis')
 const debug = require('debug')('ara:network:node:identity-manager')
-const https = require('https')
 const http = require('http')
 const pify = require('pify')
 const util = require('ara-util')
@@ -43,7 +42,7 @@ const status = {
   badRequest: 400,
   notFound: 404,
   ok: 200,
-  authenticationError : 401
+  authenticationError: 401
 }
 
 const msg = {
@@ -138,16 +137,15 @@ async function start() {
   channel = createChannel({ })
   redisClient = redis.createClient()
 
-  redisClient.on('connect', function() {
-    info('Redis client connected');
+  redisClient.on('connect', () => {
+    info('Redis client connected')
   })
 
-  redisClient.on('error', function (err) {
-    info('Something went wrong ' + err);
+  redisClient.on('error', (err) => {
+    info(`Something went wrong ${err}`)
   })
 
   await context.ready()
-  const { web3 } = context
 
   if (!conf.password) {
     ({ password } = await inquirer.prompt([
@@ -211,7 +209,6 @@ async function start() {
       .send('`delete` not implemented. \n')
   })
 
-
   debug('Creating an _http_ server.')
   server = http.createServer(app)
 
@@ -223,7 +220,7 @@ async function start() {
   return true
 
   async function authenticate(req, res, next) {
-    let ip = req.headers['x-forwarded-for'] || req.connection.remoteAddress
+    const ip = req.headers['x-forwarded-for'] || req.connection.remoteAddress
     info('%s: Received request from', pkg.name, ip)
     if (undefined === req.headers.authentication || conf.authenticationKey !== req.headers.authentication) {
       res
@@ -233,6 +230,7 @@ async function start() {
     } else {
       return next()
     }
+    return true
   }
 
   async function onstatus(req, res) {
@@ -343,7 +341,7 @@ async function start() {
         clearTimeout(timer)
       }
     } catch (err) {
-      console.log(err)
+      debug(err)
       res
         .status(status.internalServerError)
         .send(`Could not resolve DID: ${req.params.did}\n`)
@@ -366,11 +364,11 @@ async function start() {
       }
       res.status(status.ok)
       info('%s: Balance request for %s', pkg.name, req.params.did)
-      const did = req.params.did
+      const { did } = req.params
       let balance = null
-      redisClient.get(did, async function (err, bal) {
-        if ( bal == null ) {
-          debug("Balance expired, retrieving from blockchain")
+      redisClient.get(did, async (err, bal) => {
+        if (null == bal) {
+          debug('Balance expired, retrieving from blockchain')
           balance = await token.balanceOf(did)
           redisClient.set(did, balance, 'EX', 60, (err, res) => {
             if (err) {
@@ -388,7 +386,7 @@ async function start() {
         debug('%s: Balance request completed successfully.', pkg.name)
       })
     } catch (err) {
-      console.log(err)
+      debug(err)
       res
         .status(status.internalServerError)
         .send('Balance request failed. \n')
@@ -410,12 +408,11 @@ async function start() {
       info('%s: Transfer request for', pkg.name, req.params.did)
       const recipient = req.params.did
       const tokens = req.body.tokens || DEFAULT_TOKEN_COUNT
-      let balance = await token.balanceOf(req.params.did)
-      if ((parseInt(balance) + parseInt(tokens)) > MAX_TOKEN_PER_ACCOUNT) {
+      const balance = await token.balanceOf(req.params.did)
+      if ((parseInt(balance, 10) + parseInt(tokens, 10)) > MAX_TOKEN_PER_ACCOUNT) {
         res.status(status.ok)
         res.end(`Cannot transfer tokens. Only ${MAX_TOKEN_PER_ACCOUNT} allowed per user`)
-      }
-      else {
+      } else {
         token.transfer({
           did: process.env.DID,
           password: process.env.pwd,
@@ -465,7 +462,7 @@ async function start() {
         res.status(status.ok)
         info('%s: Transfer request for', req.params.did)
         const recipient = 'did:ara:89b83d3deab9507889710bb5dbaf5e863435c05193dcb128f6488e0bd42a492b'
-        const tokens = req.body.tokens
+        const { tokens } = req.body
         const password = req.body.passphrase
 
         const receipt = token.transfer({
@@ -476,7 +473,7 @@ async function start() {
         })
 
         res.setHeader('Content-Type', 'application/json')
-        res.end()
+        res.end(JSON.stringify(receipt))
         res.on('finish', () => { clearTimeout(timer) })
         info('%s: Redeem request submitted successfully!!!!', pkg.name)
       }
