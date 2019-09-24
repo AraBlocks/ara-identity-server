@@ -410,28 +410,30 @@ async function start() {
       info('%s: Transfer request for', pkg.name, req.params.did)
       const recipient = req.params.did
       const tokens = req.body.tokens || DEFAULT_TOKEN_COUNT
-      let balance = await token.balanceOf(did)
-      if ((balance + tokens) > MAX_TOKEN_PER_ACCOUNT) {
+      let balance = await token.balanceOf(req.params.did)
+      if ((parseInt(balance) + parseInt(tokens)) > MAX_TOKEN_PER_ACCOUNT) {
         res.status(status.ok)
         res.end(`Cannot transfer tokens. Only ${MAX_TOKEN_PER_ACCOUNT} allowed per user`)
       }
-      token.transfer({
-        did: process.env.DID,
-        password: process.env.pwd,
-        to: recipient,
-        val: tokens
-      }).then((data) => {
-        info(JSON.stringify(data))
-      })
+      else {
+        token.transfer({
+          did: process.env.DID,
+          password: process.env.pwd,
+          to: recipient,
+          val: tokens
+        }).then((data) => {
+          info(JSON.stringify(data))
+        })
 
-      res.status(status.ok)
-      res.setHeader('Content-Type', 'application/json')
-      res.end(JSON.stringify({
-        created_at: now,
-        did: recipient,
-        tokens_requested: tokens
-      }))
-      info('%s: Transfer request submitted successfully.', pkg.name)
+        res.status(status.ok)
+        res.setHeader('Content-Type', 'application/json')
+        res.end(JSON.stringify({
+          created_at: now,
+          did: recipient,
+          tokens_requested: tokens
+        }))
+        info('%s: Transfer request submitted successfully.', pkg.name)
+      }
     } catch (err) {
       warn(err)
       res
