@@ -299,7 +299,7 @@ $ curl -H 'authentication: 4f2b0b9de037d2ed2e761637dc479414850fc693dc527f59a48dc
 ### `balance` <a name="balance-route"></a>
 
 Get the ARA Balance of a user wallet. Accepts DID
-- `did`: User DID to which tokens need to be transferred
+- `did`: DID of the Littlstar User
 
 ```
 $ curl -H 'authentication: 4f2b0b9de037d2ed2e761637dc479414850fc693dc527f59a48dcb3c5ac84469f0dc53b0ad9ee8636d9c58fdf8daa97fab22286317ec95b7573cdd84597f952f' /
