@@ -182,7 +182,7 @@ The response format might be changed in the future to match the [did-resolution 
 ```
 $ curl -H "authentication: <authenticationKey>" \
        -i -X GET \
-       "http://localhost:8877/1.0/identifiers?did=did:ara:ec8919bb209b81cefb5aaeb13075411adf468c9c532354762ca9ce269ba00e8f"
+       "http://localhost:8877/1.0/identifiers/did:ara:ec8919bb209b81cefb5aaeb13075411adf468c9c532354762ca9ce269ba00e8f"
 
 HTTP/1.1 200 OK
 X-Powered-By: Express
@@ -270,6 +270,52 @@ Date: Tue, 11 Sep 2018 16:05:01 GMT
 Connection: keep-alive
 
 Ara Identity Manager up and running.
+```
+
+### `transfer` <a name="transfer-route"></a>
+
+Transfers ARA tokens to the mentioned DID. Accepts DID and optional token paramenter. Default Tokens : 100
+- `did`: User DID to which tokens need to be transferred
+- `tokens` : No of Tokens that needs to be transferred (Optional) (Default Value : 100)
+
+```
+$ curl -H 'authentication: 4f2b0b9de037d2ed2e761637dc479414850fc693dc527f59a48dcb3c5ac84469f0dc53b0ad9ee8636d9c58fdf8daa97fab22286317ec95b7573cdd84597f952f' /
+       -H 'Content-Type: application/x-www-form-urlencoded' /
+       -i -X POST -d "tokens=<no_of_tokens>" "http://localhost:8600/1.0/identifiers/did:ara:785b9662245f689ec13cd3bf6ab7e8e2f32a7166e2b8485c29e12109b200229f/transfer"
+
+  HTTP/1.1 200 OK
+  X-Powered-By: Express
+  Access-Control-Allow-Origin: http://mrmanager.ara.one
+  Access-Control-Allow-Headers: Authentication, Content-Type
+  Content-Type: application/json
+  Date: Tue, 24 Sep 2019 17:49:07 GMT
+  Connection: keep-alive
+  Content-Length: 147
+
+  {"created_at":"2019-09-24T17:49:07.618Z","did":"did:ara:785b9662245f689ec13cd3bf6ab7e8e2f32a7166e2b8485c29e12109b200229f","tokens_requested":"<no_of_tokens>"}%
+
+```
+
+### `balance` <a name="balance-route"></a>
+
+Get the ARA Balance of a user wallet. Accepts DID
+- `did`: User DID to which tokens need to be transferred
+
+```
+$ curl -H 'authentication: 4f2b0b9de037d2ed2e761637dc479414850fc693dc527f59a48dcb3c5ac84469f0dc53b0ad9ee8636d9c58fdf8daa97fab22286317ec95b7573cdd84597f952f' /
+       -i -X GET "http://localhost:8600/1.0/identifiers/did:ara:785b9662245f689ec13cd3bf6ab7e8e2f32a7166e2b8485c29e12109b200229f/balance"
+
+  HTTP/1.1 200 OK
+  X-Powered-By: Express
+  Access-Control-Allow-Origin: http://mrmanager.ara.one
+  Access-Control-Allow-Headers: Authentication, Content-Type
+  Content-Type: application/json
+  Date: Tue, 24 Sep 2019 17:49:07 GMT
+  Connection: keep-alive
+  Content-Length: 147
+
+  {"balance":"201"}
+
 ```
 
 ## Contributing
