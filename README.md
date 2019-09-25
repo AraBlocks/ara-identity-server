@@ -109,6 +109,8 @@ Passphrase: [hidden]
 * [create](#create)
 * [resolve](#resolve)
 * [status](#status-route)
+* [transfer](#transfer-route)
+* [balance](#balance-route)
 
 ### `create ? passphrase` <a name="create"></a>
 
