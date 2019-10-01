@@ -195,7 +195,7 @@ async function start() {
   app.post(`${appRoute}/:did/transfer`, authenticate, ontransfer)
   app.post(`${appRoute}/:did/redeem`, onredeem)
 
-  app.get(`${appRoute}/status`, onstatus)
+  app.get('/_hc', onstatus)
 
   app.all(`${appRoute}/update/`, (req, res) => {
     res
@@ -234,10 +234,10 @@ async function start() {
   }
 
   async function onstatus(req, res) {
-    info('%s: Status ping received', pkg.name)
+    const ip = req.headers['x-forwarded-for'] || req.connection.remoteAddress
+    info('%s: Status ping received from %s', pkg.name, ip)
     res
       .status(status.ok)
-      .send(msg.status)
       .end()
   }
 
@@ -413,14 +413,18 @@ async function start() {
         res.status(status.ok)
         res.end(`Cannot transfer tokens. Only ${MAX_TOKEN_PER_ACCOUNT} allowed per user`)
       } else {
-        token.transfer({
-          did: process.env.DID,
-          password: process.env.pwd,
-          to: recipient,
-          val: tokens
-        }).then((data) => {
-          info(JSON.stringify(data))
-        })
+        try {
+          token.transfer({
+            did: process.env.DID,
+            password: process.env.pwd,
+            to: recipient,
+            val: tokens
+          }).then((data) => {
+            info(JSON.stringify(data))
+          })
+        } catch (err) {
+          debug(err)
+        }
 
         res.status(status.ok)
         res.setHeader('Content-Type', 'application/json')
