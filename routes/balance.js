@@ -1,21 +1,18 @@
-const { writeIdentity } = require('ara-identity/util')
-const { info, warn } = require('ara-console')
+const { info } = require('ara-console')
 const redisClient = require('../services/redis.js')
 const { token } = require('ara-contracts')
-const context = require('ara-context')()
 const debug = require('debug')('ara:network:node:identity-manager:onbalance')
-const util = require('ara-util')
 const pkg = require('../package')
-const aid = require('ara-identity')
 
 const {
-  server_values,
+  serverValues,
   status,
-  msg } = require('../config')
+  msg
+} = require('../config')
 
 const {
   REQUEST_TIMEOUT
-} = server_values
+} = serverValues
 
 /**
  * Middleware to query Ara Balance of a DID
@@ -38,15 +35,15 @@ async function onbalance(req, res) {
     info('%s: Balance request for %s', pkg.name, req.params.did)
     const { did } = req.params
     let balance = null
-    redisClient.get(did, async (err, bal) => {
+    redisClient.get(did, async (error, bal) => {
       if (null == bal) {
         debug('Balance expired, retrieving from blockchain')
         balance = await token.balanceOf(did)
-        redisClient.set(did, balance, 'EX', 60, (err, res) => {
+        redisClient.set(did, balance, 'EX', 60, (err, val) => {
           if (err) {
             debug(err)
           } else {
-            debug(res)
+            debug(val)
           }
         })
       } else {

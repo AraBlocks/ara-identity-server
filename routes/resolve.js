@@ -1,5 +1,5 @@
 const { parse: parseDID } = require('did-uri')
-const { info, warn } = require('ara-console')
+const { info } = require('ara-console')
 const { readFile } = require('fs')
 const { resolve } = require('path')
 const { DID } = require('did-uri')
@@ -10,13 +10,14 @@ const pkg = require('../package')
 const rc = require('../config/rc')()
 
 const {
-  server_values,
+  serverValues,
   status,
-  msg } = require('../config')
+  msg
+} = require('../config')
 
 const {
   REQUEST_TIMEOUT
-} = server_values
+} = serverValues
 
 /**
  * Middleware for resolving Ara Identities
@@ -26,7 +27,7 @@ const {
 
 async function onresolve(req, res) {
   const now = Date.now()
-  const ara_path = rc.network.identity.root
+  const araPath = rc.network.identity.root
   const timer = setTimeout(() => {
     res
       .status(status.requestTimeout)
@@ -44,7 +45,7 @@ async function onresolve(req, res) {
       const did = new DID(req.params.did)
       const publicKey = Buffer.from(did.identifier, 'hex')
       const hash = crypto.blake2b(publicKey).toString('hex')
-      const path = resolve(ara_path, hash, 'ddo.json')
+      const path = resolve(araPath, hash, 'ddo.json')
       const ddo = JSON.parse(await pify(readFile)(path, 'utf8'))
       const duration = Date.now() - now
       const response = createResponse({ did, ddo, duration })

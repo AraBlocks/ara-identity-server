@@ -1,24 +1,17 @@
-const { writeIdentity } = require('ara-identity/util')
 const { info, warn } = require('ara-console')
-const redisClient = require('../services/redis.js')
 const { token } = require('ara-contracts')
-const context = require('ara-context')()
 const debug = require('debug')('ara:network:node:identity-manager:ontransfer')
-const util = require('ara-util')
 const pkg = require('../package')
-const aid = require('ara-identity')
 
 const {
-  server_values,
-  status,
-  msg } = require('../config')
+  serverValues,
+  status
+} = require('../config')
 
 const {
-  REQUEST_TIMEOUT,
-  TRANSFER_TIMEOUT,
   DEFAULT_TOKEN_COUNT,
   MAX_TOKEN_PER_ACCOUNT
-} = server_values
+} = serverValues
 
 /**
  * Middleware to allocate Ara Rewards
@@ -27,6 +20,28 @@ const {
  */
 
 async function ontransfer(req, res) {
+  function onhash(txHash) {
+    info('Transaction hash: ', txHash)
+  }
+
+  function onreceipt(receipt) {
+    info('Transaction Receipt: ', receipt)
+  }
+
+  function onconfirmation(confNumber, receipt) {
+    info('Confirmation #: ', confNumber)
+    info('Confirmation Receipt: ', receipt)
+  }
+
+  function onmined(data) {
+    info('Ara Token Transfer completed successfully')
+    info('Confirmation: ', data)
+  }
+
+  function onerror(err) {
+    debug(err)
+  }
+
   const now = new Date()
 
   try {
@@ -44,29 +59,6 @@ async function ontransfer(req, res) {
       res.end(`Cannot complete transfer request. Only ${MAX_TOKEN_PER_ACCOUNT} allowed per user`)
     } else {
       try {
-
-        function onhash(txHash) {
-          info("Transaction hash: ", txHash)
-        }
-
-        function onreceipt(receipt) {
-          info("Transaction Receipt: ", receipt)
-        }
-
-        function onconfirmation(confNumber, receipt) {
-          info("Confirmation #: ", confNumber)
-          info("Confirmation Receipt: ", receipt)
-        }
-
-        function onmined(data) {
-          info("Ara Token Transfer completed successfully")
-          info("Confirmation: ", data)
-        }
-
-        function onerror(err) {
-          error(err)
-        }
-
         token.transfer({
           did: process.env.DID,
           password: process.env.pwd,

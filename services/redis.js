@@ -1,8 +1,7 @@
-'use strict'
-const { info, warn } = require('ara-console')
+const { info } = require('ara-console')
 const redis = require('redis')
 
-let redisClient = redis.createClient()
+const redisClient = redis.createClient()
 
 redisClient.on('connect', () => {
   info('Redis client connected')

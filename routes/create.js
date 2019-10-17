@@ -1,5 +1,5 @@
 const { writeIdentity } = require('ara-identity/util')
-const { info, warn } = require('ara-console')
+const { info } = require('ara-console')
 const redisClient = require('../services/redis.js')
 const context = require('ara-context')()
 const debug = require('debug')('ara:network:node:identity-manager:oncreate')
@@ -8,13 +8,14 @@ const pkg = require('../package')
 const aid = require('ara-identity')
 
 const {
-  server_values,
+  serverValues,
   status,
-  msg } = require('../config')
+  msg
+} = require('../config')
 
 const {
   REQUEST_TIMEOUT
-} = server_values
+} = serverValues
 
 /**
  * Middleware for creating an ARA Identity
@@ -49,11 +50,11 @@ async function oncreate(req, res) {
       const walletAddress = await util.getAddressFromDID(did)
 
       // Write Entry into Redis Store
-      redisClient.set(did, 0, 'EX', 60, (err, res) => {
+      redisClient.set(did, 0, 'EX', 60, (err, val) => {
         if (err) {
           debug(err)
         } else {
-          debug(res)
+          debug(val)
         }
       })
 
