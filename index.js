@@ -2,25 +2,15 @@
 /* eslint-disable max-len */
 /* eslint-disable no-warning-comments */
 const { getClientAuthKey, getServerAuthKey } = require('./util')
-const { readFile } = require('fs')
 const { info, warn } = require('ara-console')
-const { parse: parseDID } = require('did-uri')
 const { createChannel } = require('ara-network/discovery/channel')
-const { resolve } = require('path')
 const bodyParser = require('body-parser')
-const { token } = require('ara-contracts')
 const inquirer = require('inquirer')
 const coalesce = require('defined')
 const context = require('ara-context')()
-const { DID } = require('did-uri')
 const express = require('express')
-const crypto = require('ara-crypto')
-const redis = require('redis')
 const debug = require('debug')('ara:network:node:identity-manager')
 const http = require('http')
-const pify = require('pify')
-const util = require('ara-util')
-const aid = require('ara-identity')
 const pkg = require('./package')
 const rc = require('./config/rc')()
 
@@ -31,13 +21,6 @@ const {
   oncreate,
   onredeem
 } = require('./routes')
-
-// in milliseconds
-const REQUEST_TIMEOUT = 5000
-
-//const DEFAULT_GAS_PRICE =
-const DEFAULT_TOKEN_COUNT = 100
-const MAX_TOKEN_PER_ACCOUNT = 500
 
 const appRoute = '/1.0/identifiers'
 
@@ -54,7 +37,7 @@ const status = {
 }
 
 const msg = {
-  requestTimeout: `Request timed out after ${REQUEST_TIMEOUT} ms. \n`,
+  requestTimeout: 'Request timed out. \n',
   authenticationFailed: 'Missing or invalid authentication credentials. \n',
   status: 'Ara Identity Manager up and running. \n'
 }
@@ -71,7 +54,6 @@ const conf = {
   // Authentication@ TODO : Use public network key in keyring file to validate requests
   authenticationKey: null,
 }
-let redisClient = null
 let server = null
 let channel = null
 let app = null
@@ -143,7 +125,6 @@ async function start() {
   let discoveryKey = null
 
   channel = createChannel({ })
-
 
   await context.ready()
 
