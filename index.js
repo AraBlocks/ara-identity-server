@@ -159,6 +159,12 @@ async function start() {
   debug('%s: discovery key:', pkg.name, discoveryKey.toString('hex'))
   debug('%s: authentication key:', pkg.name, conf.authenticationKey)
 
+  // Check for Environment Variables
+  if (!process.env.DID && !process.env.pwd) {
+    info('Missing Environment Variables for Master Ara Account')
+    return false
+  }
+
   // Server
   app = express()
 
@@ -177,18 +183,6 @@ async function start() {
   app.post(`${appRoute}/:did/redeem`, onredeem)
 
   app.get('/_hc', onstatus)
-
-  app.all(`${appRoute}/update/`, (req, res) => {
-    res
-      .status(status.notImplemented)
-      .send('`update` not implemented. \n')
-  })
-
-  app.all(`${appRoute}/delete/`, (req, res) => {
-    res
-      .status(status.notImplemented)
-      .send('`delete` not implemented. \n')
-  })
 
   debug('Creating an _http_ server.')
   server = http.createServer(app)
