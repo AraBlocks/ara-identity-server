@@ -25,6 +25,7 @@ const msg = {
 /*
 Constant Values
  */
+
 const serverValues = {
   MAX_TOKEN_PER_ACCOUNT: 500,
   DEFAULT_TOKEN_COUNT: 100,
@@ -32,8 +33,15 @@ const serverValues = {
   REQUEST_TIMEOUT: 5000
 }
 
+/*
+Eth Gas Station API URL
+ */
+
+const gasAPI = "https://ethgasstation.info/json/ethgasAPI.json"
+
 module.exports = {
   serverValues,
+  gasAPI,
   status,
   msg
 }
