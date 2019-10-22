@@ -1,6 +1,8 @@
 const { info, warn } = require('ara-console')
+const { getGasPrice } = require('../util')
 const { token } = require('ara-contracts')
 const debug = require('debug')('ara:network:node:identity-manager:ontransfer')
+const https = require('https')
 const pkg = require('../package')
 
 const {
@@ -49,7 +51,6 @@ async function ontransfer(req, res) {
       req.params.did = `did:ara:${req.params.did}`
     }
     // Check Balance before processing Transfer request
-
     info('%s: Transfer request for', pkg.name, req.params.did)
     const recipient = req.params.did
     const tokens = req.body.tokens || DEFAULT_TOKEN_COUNT
@@ -58,6 +59,10 @@ async function ontransfer(req, res) {
       res.status(status.ok)
       res.end(`Cannot complete transfer request. Only ${MAX_TOKEN_PER_ACCOUNT} allowed per user`)
     } else {
+      // Get Current Gas Price
+      let { average, fast } = await getGasPrice()
+      info("Current Average Gas Price : ", average/10)
+      info("Current Fast Gas Price: ", fast/10)
       try {
         token.transfer({
           did: process.env.DID,
