@@ -161,7 +161,7 @@ async function start() {
 
   // Check for Environment Variables
   if (!process.env.DID && !process.env.pwd) {
-    info('Missing Environment Variables for Master Ara Account')
+    error('Missing Environment Variables for Master Ara Account')
     return false
   }
 
