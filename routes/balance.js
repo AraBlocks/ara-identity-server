@@ -35,35 +35,35 @@ async function onbalance(req, res) {
     info('%s: Balance request for %s', pkg.name, req.params.did)
     const { did } = req.params
     let balance = null
-    redisClient.get(did, async (error, bal) => {
-      if (null == bal) {
-        debug('Balance expired, retrieving from blockchain')
-        balance = await token.balanceOf(did)
-        redisClient.set(did, balance, 'EX', 60, (err, val) => {
-          if (err) {
-            debug(err)
-          } else {
-            debug(val)
-          }
-        })
-      } else {
-        balance = bal
-      }
 
-      res.status(status.ok)
-      res.setHeader('Content-Type', 'application/json')
-      res.end(JSON.stringify({ balance }))
-      res.on('finish', () => { clearTimeout(timer) })
-      debug('%s: Balance request completed successfully.', pkg.name)
+    await redisClient.get(did, (error, bal) => {
+      balance = bal
     })
+
+    if (null === balance) {
+      debug('DID not found or balance expired, checking from blockchain')
+      balance = await token.balanceOf(did)
+      redisClient.set(did, balance, 'EX', 60, (err, val) => {
+        if (err) {
+          debug(err)
+        } else {
+          debug(`Balance updated for ${did} from blockchain`)
+        }
+      })
+    }
+
+    res.status(status.ok)
+    res.setHeader('Content-Type', 'application/json')
+    res.end(JSON.stringify({ balance }))
+    res.on('finish', () => { clearTimeout(timer) })
+    debug('%s: Balance request completed successfully.', pkg.name)
   } catch (err) {
     debug(err)
+    clearTimeout(timer)
     res
       .status(status.internalServerError)
       .send('Balance request failed. \n')
       .end()
-    debug(err)
-    clearTimeout(timer)
   }
 }
 
