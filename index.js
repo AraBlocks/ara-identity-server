@@ -14,6 +14,10 @@ const http = require('http')
 const pkg = require('./package')
 const rc = require('./config/rc')()
 
+process.on('uncaughtException', (err) => {
+  console.error(err.stack || err)
+})
+
 const {
   ontransfer,
   onbalance,
@@ -177,7 +181,7 @@ async function start() {
   app.use(bodyParser.urlencoded({ extended: true }))
 
   app.post(`${appRoute}/`, authenticate, oncreate)
-  app.get(`${appRoute}/:did`, authenticate, onresolve)
+  app.get(`${appRoute}/:did`, onresolve)
   app.get(`${appRoute}/:did/balance`, authenticate, onbalance)
   app.post(`${appRoute}/:did/transfer`, authenticate, ontransfer)
   app.post(`${appRoute}/:did/redeem`, onredeem)
