@@ -1,5 +1,5 @@
 const { getGasPrice } = require('./getGasPrice')
-const { privateAPI } = require('../config')
+const { privateAPI, serverValues } = require('../config')
 const { info, warn } = require('ara-console')
 const redisClient = require('../services/redis.js')
 const request = require('superagent')
@@ -11,6 +11,11 @@ const {
   apiKey,
   appToken
 } = privateAPI
+
+const {
+  TRANSFER_TIMEOUT
+} = serverValues
+
 /**
  * Submit a transaction to the blockchain
  * @param  {Object}   opts
@@ -37,6 +42,54 @@ async function submitTransaction(opts) {
   if(!gasPrice) {
     gasPrice = average/10
   }
+
+  function ontimeout() {
+    info('Transfer Request timed out....Submitting on a higher Gas Price')
+    token.transfer({
+      did: process.env.DID,
+      password: process.env.pwd,
+      to,
+      val,
+      gasPrice: fast/10
+    })
+    .then(async (data) => {
+      clearTimeout(timer)
+
+      info('Receipt : ', data)
+      info('Transfer Request completed successfully')
+
+      // Get Updated Balance from the Blockchain
+      let balance = await token.balanceOf(to)
+      await redisClient.set(to, balance, 'EX', 60, (err, val) => {
+        if (err) {
+          debug(err)
+        } else {
+          debug(`Balance updated for ${to}`)
+        }
+      })
+
+      // Update Balance to Rails Backend
+      await request
+      .post(`${basePath}/ara_identities/callback`)
+      .send({ did: to, balance })
+      .set('X-Apikey', apiKey)
+      .set('X-AppToken', appToken)
+      .set('Accept', 'application/json')
+      .then((res) => {
+        if (200 === res.status) {
+          info(`Balance Updated in Rails Backend for ${to}`)
+        }
+      })
+      .catch((err) => {
+        debug(err)
+      })
+    })
+  }
+
+  let timer = null
+  timer = setTimeout(ontimeout, TRANSFER_TIMEOUT)
+
+  // Submit Transfer Request to Blockchain
   token.transfer({
     did: process.env.DID,
     password: process.env.pwd,
@@ -45,6 +98,8 @@ async function submitTransaction(opts) {
     gasPrice
   })
   .then(async (data) => {
+    clearTimeout(timer)
+
     info('Receipt : ', data)
     info('Transfer Request completed successfully')
 
@@ -77,6 +132,8 @@ async function submitTransaction(opts) {
 
   return true
 }
+
+
 
 module.exports = {
   submitTransaction
