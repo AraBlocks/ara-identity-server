@@ -4,6 +4,10 @@ const { token } = require('ara-contracts')
 const debug = require('debug')('ara:network:node:identity-manager:onbalance')
 const pkg = require('../package')
 
+const { promisify } = require('util')
+const getAsync = promisify(redisClient.get).bind(redisClient)
+const setAsync = promisify(redisClient.set).bind(redisClient)
+
 const {
   serverValues,
   status,
@@ -36,20 +40,13 @@ async function onbalance(req, res) {
     const { did } = req.params
     let balance = null
 
-    await redisClient.get(did, (error, bal) => {
-      balance = bal
-    })
+    balance = await getAsync(did)
 
     if (null === balance) {
       debug('DID not found or balance expired, checking from blockchain')
       balance = await token.balanceOf(did)
-      redisClient.set(did, balance, 'EX', 60, (err, val) => {
-        if (err) {
-          debug(err)
-        } else {
-          debug(`Balance updated for ${did} from blockchain`)
-        }
-      })
+      await setAsync(did, balance, 'EX', 60)
+      debug(`Updated Balance for ${did} from blockchain`)
     }
 
     res.status(status.ok)
