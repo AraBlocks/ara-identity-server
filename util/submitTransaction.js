@@ -2,7 +2,7 @@ const { getGasPrice } = require('./getGasPrice')
 const { privateAPI } = require('../config')
 const { info, warn } = require('ara-console')
 const redisClient = require('../services/redis.js')
-const superagent = require('superagent')
+const request = require('superagent')
 const { token } = require('ara-contracts')
 const debug = require('debug')('ara:network:node:identity-manager:getGasPrice')
 
@@ -50,12 +50,28 @@ async function submitTransaction(opts) {
 
     // Get Updated Balance from the Blockchain
     let balance = await token.balanceOf(to)
-    redisClient.set(to, balance, 'EX', 60, (err, val) => {
+    await redisClient.set(to, balance, 'EX', 60, (err, val) => {
       if (err) {
         debug(err)
       } else {
-        debug(val)
+        debug(`Balance updated for ${to}`)
       }
+    })
+
+    // Update Balance to Rails Backend
+    await request
+    .post(`${basePath}/ara_identities/callback`)
+    .send({ did: to, balance })
+    .set('X-Apikey', apiKey)
+    .set('X-AppToken', appToken)
+    .set('Accept', 'application/json')
+    .then((res) => {
+      if (200 === res.status) {
+        info(`Balance Updated in Rails Backend for ${to}`)
+      }
+    })
+    .catch((err) => {
+      debug(err)
     })
   })
 
