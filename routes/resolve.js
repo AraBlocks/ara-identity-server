@@ -6,6 +6,7 @@ const { DID } = require('did-uri')
 const crypto = require('ara-crypto')
 const debug = require('debug')('ara:network:node:identity-manager:onresolve')
 const pify = require('pify')
+const aid = require('ara-identity')
 const pkg = require('../package')
 const rc = require('../config/rc')()
 
@@ -42,11 +43,9 @@ async function onresolve(req, res) {
     info('%s: Resolve request received for: %s', pkg.name, req.params.did)
 
     try {
-      const did = new DID(req.params.did)
-      const publicKey = Buffer.from(did.identifier, 'hex')
-      const hash = crypto.blake2b(publicKey).toString('hex')
-      const path = resolve(araPath, hash, 'ddo.json')
-      const ddo = JSON.parse(await pify(readFile)(path, 'utf8'))
+      const { did } = req.params
+      const ddo = await aid.resolve(did)
+
       const duration = Date.now() - now
       const response = createResponse({ did, ddo, duration })
       res.setHeader('Content-Type', 'application/json')
