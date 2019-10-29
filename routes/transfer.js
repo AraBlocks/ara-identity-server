@@ -39,7 +39,7 @@ async function ontransfer(req, res) {
 
     // Check Balance before processing Transfer request
     if ((parseInt(balance, 10) + parseInt(tokens, 10)) > MAX_TOKEN_PER_ACCOUNT) {
-      res.status(status.ok)
+      res.status(status.badRequest)
       res.end(`Cannot complete transfer request. Only ${MAX_TOKEN_PER_ACCOUNT} allowed per user`)
     } else {
       try {
