@@ -2,7 +2,7 @@
 ;; Ethereum
 [web3]
 provider=ws://127.0.0.1:8546
-network_id=mainnet
+network_id=testnet
 
 [web3.privatenet]
 provider[]=http://127.0.0.1:8545
@@ -16,17 +16,10 @@ provider[]=infura
 
 ;; Identity network
 [network.identity]
-keyring = 'https://keyring.ara.one/ara-production-public'
-#keyring = /Users/prashanthbalasubramani/Desktop/keyringfile
-secret = "ara-production"
-
-[network.identity.resolver]
-network = resolver1
-servers[] = "http://35.153.157.59:5123"
-servers[] = "https://resolver.ara.one"
-
-[network.identity.archiver]
-network = archiver2
+whoami = "did:ara:c91315e1a001d572da945c7c54bd6a12aedf78fd72271d95e952fd76284cc71f"
+keyring = "/home/ubuntu/.ara/keyrings/production-keyring"
+secret = "ls-id-production"
+network = "production"
 
 [network.dns]
 server[] = "discovery1.ara.one"
