@@ -74,30 +74,37 @@ async function configure(opts, program) {
         alias: 'i',
         describe: 'Ara Identity for the network node',
         type: 'string',
-        required: true,
+        default:
+          rc.network.identity.whoami ||
+          rc.network.whoami,
       })
       .option('secret', {
         alias: 's',
         describe: 'Shared secret key',
         type: 'string',
-        // required: true, // see secret@TODO
+        default:
+          rc.network.identity.secret ||
+          rc.network.secret,
       })
       .option('network', {
         alias: 'n',
         describe: 'Human readable network keys name.',
         type: 'string',
-        required: true,
+        default: rc.network.identity.network
       })
       .option('keyring', {
         alias: 'k',
         describe: 'Path to ARA network keys',
         type: 'string',
-        required: true,
+        default:
+          rc.network.identity.keyring ||
+          rc.network.keyring,
       })
       .option('port', {
         alias: 'p',
         describe: 'Port for network node to listen on.',
-        type: 'number'
+        type: 'number',
+        default : 5123
       })
       // eslint-disable-next-line prefer-destructuring
     argv = program.argv
