@@ -16,17 +16,10 @@ provider[]=infura
 
 ;; Identity network
 [network.identity]
-keyring = 'https://keyring.ara.one/ara-production-public'
-#keyring = /Users/prashanthbalasubramani/Desktop/keyringfile
-secret = "ara-production"
-
-[network.identity.resolver]
-network = resolver1
-servers[] = "http://35.153.157.59:5123"
-servers[] = "https://resolver.ara.one"
-
-[network.identity.archiver]
-network = archiver2
+whoami = "did:ara:89c55055c9d51411f927934f1d42e0c8148dbf785cda9bc940de01879db984ef"
+keyring = "/home/ubuntu/.ara/keyrings/staging-keyring"
+secret = "ls-id-staging"
+network = "staging"
 
 [network.dns]
 server[] = "discovery1.ara.one"
