@@ -16,13 +16,22 @@ if (process.env.ENV) {
 }
 
 /*
+Redis Host
+ */
+const redisInfo = {}
+
+redisInfo.Host = 'production' === env ?
+  '':
+  '127.0.0.1'
+
+/*
 Set Littlstar Private API credentials
  */
 
 const privateAPI = {}
 
 privateAPI.basePath = 'production' === env ?
-  'https://littlstar.com/api/private' :
+  'https://littlstar.com/api/private':
   'https://staging.littlstar.com/api/private'
 
 privateAPI.apiKey = 'production' === env ?
@@ -77,6 +86,7 @@ const gasAPI = "https://ethgasstation.info/json/ethgasAPI.json"
 module.exports = {
   serverValues,
   privateAPI,
+  redisInfo,
   gasAPI,
   status,
   msg

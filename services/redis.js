@@ -1,7 +1,10 @@
+const { redisInfo } = require('../config')
 const { info } = require('ara-console')
 const redis = require('redis')
 
-const redisClient = redis.createClient()
+const { host } = redisInfo
+
+const redisClient = redis.createClient(host)
 
 redisClient.on('connect', () => {
   info('Redis client connected')
