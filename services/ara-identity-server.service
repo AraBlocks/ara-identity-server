@@ -1,5 +1,5 @@
 [Unit]
-Description=ROT13 demo service
+Description=Littlstar Ara Rewards API
 After=network.target
 StartLimitIntervalSec=0
 
@@ -7,8 +7,9 @@ StartLimitIntervalSec=0
 Type=simple
 Restart=always
 RestartSec=1
-User=centos
-ExecStart=/usr/bin/env php /path/to/server.php
+User=root
+ExecStart=/home/ubuntu/.nvm/versions/node/v10.16.0/bin/ann -t /home/ubuntu/ara-identity-server/.
+Environment="NODE_PATH=/root/node_modules"
 
 [Install]
 WantedBy=multi-user.target
