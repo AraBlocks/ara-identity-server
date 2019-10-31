@@ -7,10 +7,10 @@ StartLimitIntervalSec=0
 Type=simple
 Restart=always
 RestartSec=1
-User=root
-Environment="ENV=staging" "DID=did:ara:89b83d3deab9507889710bb5dbaf5e863435c05193dcb128f6488e0bd42a492b" "pwd='Reve!!er'"
-Environment="NODE_PATH=/root/node_modules"
-ExecStart=/home/ubuntu/.nvm/versions/node/v10.16.0/bin/ann -t /home/ubuntu/ara-identity-server/. --password 'L!tt1star@123'
+User=ubuntu
+Environment="ENV=" "DID=" "pwd="
+Environment="NODE_PATH=/home/ubuntu/.npm-global/lib/node_modules"
+ExecStart=/home/ubuntu/.npm-global/bin/ann -t ara-identity-server --password ''
 
 [Install]
 WantedBy=multi-user.target
