@@ -20,7 +20,7 @@ Redis Host
  */
 const redisInfo = {}
 
-redisInfo.Host = 'production' === env ?
+redisInfo.host = 'production' === env ?
   'ls-ara-rewards-api.pruul5.ng.0001.use1.cache.amazonaws.com':
   '127.0.0.1'
 
