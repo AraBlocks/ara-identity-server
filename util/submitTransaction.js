@@ -1,10 +1,12 @@
+const { privateAPI, serverValues, masterDID } = require('../config')
 const { getGasPrice } = require('./getGasPrice')
-const { privateAPI, serverValues } = require('../config')
 const { info, warn } = require('ara-console')
 const redisClient = require('../services/redis.js')
-const request = require('superagent')
 const { token } = require('ara-contracts')
+const { web3 } = require('ara-util')
+const request = require('superagent')
 const debug = require('debug')('ara:network:node:identity-manager:getGasPrice')
+const kue = require('kue')
 
 const {
   basePath,
@@ -13,8 +15,23 @@ const {
 } = privateAPI
 
 const {
+  did,
+  password
+} = masterDID
+
+const {
   TRANSFER_TIMEOUT
 } = serverValues
+
+let jobQueue = kue.createQueue()
+
+jobQueue.on('job enqueue', function(did, tokens){
+  console.log(`Transfer Job submitted for ${did} to transfer ${tokens} ARA`)
+})
+
+jobQueue.process(`transfer`, function(job, done){
+
+})
 
 /**
  * Submit a transaction to the blockchain
@@ -35,7 +52,7 @@ async function submitTransaction(opts) {
 
   // Get Current Gas Price
   let { average, fast } = await getGasPrice()
-  info("Current Average Gas Price : ", average)
+  debug("Current Average Gas Price : ", average)
 
   let { to, val, gasPrice } = opts
 
@@ -43,65 +60,21 @@ async function submitTransaction(opts) {
     gasPrice = average/10
   }
 
-  function ontimeout() {
-    info('Transfer Request timed out....Submitting on a higher Gas Price')
-    token.transfer({
-      did: process.env.DID,
-      password: process.env.pwd,
-      to,
-      val,
-      gasPrice: fast/10
-    })
-    .then(async (data) => {
-      clearTimeout(timer)
+  let txHash = null
+  let timer = null
 
-      info('Receipt : ', data)
-      info('Transfer Request completed successfully')
-
-      // Get Updated Balance from the Blockchain
-      let balance = await token.balanceOf(to)
-      await redisClient.set(to, balance, 'EX', 60, (err, val) => {
-        if (err) {
-          debug(err)
-        } else {
-          debug(`Balance updated for ${to}`)
-        }
-      })
-
-      // Update Balance to Rails Backend
-      await request
-      .post(`${basePath}/ara_identities/callback`)
-      .send({ did: to, balance })
-      .set('X-Apikey', apiKey)
-      .set('X-AppToken', appToken)
-      .set('Accept', 'application/json')
-      .then((res) => {
-        if (200 === res.status) {
-          info(`Balance Updated in Rails Backend for ${to}`)
-        }
-      })
-      .catch((err) => {
-        debug(err)
-      })
-    })
+  function onhash(hash) {
+    txHash = hash
+    info("Transaction Hash : ", txHash)
+    timer = setTimeout(ontimeout, TRANSFER_TIMEOUT)
   }
 
-  let timer = null
-  timer = setTimeout(ontimeout, TRANSFER_TIMEOUT)
-
-  // Submit Transfer Request to Blockchain
-  token.transfer({
-    did: process.env.DID,
-    password: process.env.pwd,
-    to,
-    val,
-    gasPrice
-  })
-  .then(async (data) => {
+  async function onmined() {
     clearTimeout(timer)
+    const receipt = await web3.tx.getTransactionReceipt(txHash)
 
-    info('Receipt : ', data)
-    info('Transfer Request completed successfully')
+    debug(receipt)
+    info('Transfer Request completed successfully for ', txHash)
 
     // Get Updated Balance from the Blockchain
     let balance = await token.balanceOf(to)
@@ -115,20 +88,45 @@ async function submitTransaction(opts) {
 
     // Update Balance to Rails Backend
     await request
-    .post(`${basePath}/ara_identities/callback`)
-    .send({ did: to, balance })
-    .set('X-Apikey', apiKey)
-    .set('X-AppToken', appToken)
-    .set('Accept', 'application/json')
-    .then((res) => {
-      if (200 === res.status) {
-        info(`Balance Updated in Rails Backend for ${to}`)
-      }
+      .post(`${basePath}/ara_identities/callback`)
+      .send({ did: to, balance })
+      .set('X-Apikey', apiKey)
+      .set('X-AppToken', appToken)
+      .set('Accept', 'application/json')
+      .then((res) => {
+        if (200 === res.status) {
+          info(`Balance Updated in Rails Backend for ${to}`)
+        }
+      })
+      .catch((err) => {
+        debug(err)
+      })
+  }
+
+  function ontimeout() {
+    info('Transfer Request timed out....Submitting on a higher Gas Price')
+    token.transfer({
+      did,
+      password,
+      to,
+      val,
+      gasPrice: fast/10,
+      onhash,
+      onmined
     })
-    .catch((err) => {
-      debug(err)
-    })
+  }
+  // Submit Transfer Request to Blockchain
+  token.transfer({
+    did,
+    password,
+    to,
+    val,
+    gasPrice,
+    onhash,
+    onmined
   })
+
+
 
   return true
 }
