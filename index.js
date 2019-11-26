@@ -75,6 +75,7 @@ async function configure(opts, program) {
         describe: 'Ara Identity for the network node',
         type: 'string',
         default:
+          rc.network.identity.server.whoami ||
           rc.network.identity.whoami ||
           rc.network.whoami,
       })
@@ -83,6 +84,7 @@ async function configure(opts, program) {
         describe: 'Shared secret key',
         type: 'string',
         default:
+          rc.network.identity.server.server ||
           rc.network.identity.secret ||
           rc.network.secret,
       })
@@ -90,13 +92,16 @@ async function configure(opts, program) {
         alias: 'n',
         describe: 'Human readable network keys name.',
         type: 'string',
-        default: rc.network.identity.network
+        default:
+          rc.network.identity.server.network ||
+          rc.network.identity.network
       })
       .option('keyring', {
         alias: 'k',
         describe: 'Path to ARA network keys',
         type: 'string',
         default:
+          rc.network.identity.server.keyring ||
           rc.network.identity.keyring ||
           rc.network.keyring,
       })
