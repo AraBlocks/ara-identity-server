@@ -5,6 +5,7 @@ const debug = require('debug')('ara:network:node:identity-manager:onbalance')
 const pkg = require('../package')
 
 const { promisify } = require('util')
+
 const getAsync = promisify(redisClient.get).bind(redisClient)
 const setAsync = promisify(redisClient.set).bind(redisClient)
 

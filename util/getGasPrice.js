@@ -9,11 +9,12 @@ const debug = require('debug')('ara:network:node:identity-manager:getGasPrice')
 async function getGasPrice() {
   try {
     const res = await superagent.get(gasAPI)
-    let { body } = res
+    const { body } = res
     return body
   } catch (err) {
     debug(err)
   }
+  return true
 }
 
 module.exports = {

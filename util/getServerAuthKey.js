@@ -1,5 +1,4 @@
 const { unpack, keyRing, derive } = require('ara-network/keys')
-const { getGasPrice } = require('./getGasPrice')
 const { readFile } = require('fs')
 const { resolve } = require('path')
 const { error } = require('ara-console')
