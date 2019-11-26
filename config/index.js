@@ -75,7 +75,7 @@ Constant Values
 const serverValues = {
   MAX_TOKEN_PER_ACCOUNT: 100,
   DEFAULT_TOKEN_COUNT: 100,
-  TRANSFER_TIMEOUT: 120000,
+  TRANSFER_TIMEOUT: 180000,
   REQUEST_TIMEOUT: 5000
 }
 
@@ -85,9 +85,19 @@ Eth Gas Station API URL
 
 const gasAPI = "https://ethgasstation.info/json/ethgasAPI.json"
 
+/*
+Master ARA Wallet info
+ */
+
+const masterDID = {
+  did: process.env.DID,
+  password: process.env.pwd
+}
+
 module.exports = {
   serverValues,
   privateAPI,
+  masterDID,
   redisInfo,
   gasAPI,
   status,
