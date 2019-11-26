@@ -6,7 +6,7 @@ const https = require('https')
 const queue = require('bull')
 const pkg = require('../package')
 
-let transferQueue = new queue('Ara Transfer', 'redis://127.0.0.1:6379')
+let transferQueue = new queue('Ara Transfer')
 
 const {
   serverValues,
