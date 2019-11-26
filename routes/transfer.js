@@ -3,9 +3,11 @@ const { submitTransaction } = require('../util')
 const { token } = require('ara-contracts')
 const debug = require('debug')('ara:network:node:identity-manager:ontransfer')
 const https = require('https')
+const queue = require('bull')
 const pkg = require('../package')
 
-const { transfer } = token
+let transferQueue = new queue('Ara Transfer', 'redis://127.0.0.1:6379')
+
 const {
   serverValues,
   status
@@ -43,7 +45,7 @@ async function ontransfer(req, res) {
       res.end(`Cannot complete transfer request. Only ${MAX_TOKEN_PER_ACCOUNT} allowed per user`)
     } else {
       try {
-        submitTransaction({
+        transferQueue.add({
           to: req.params.did,
           val: tokens
         })
