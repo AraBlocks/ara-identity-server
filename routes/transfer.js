@@ -1,12 +1,10 @@
-const { info, warn } = require('ara-console')
-const { submitTransaction } = require('../util')
+const { info } = require('ara-console')
 const { token } = require('ara-contracts')
 const debug = require('debug')('ara:network:node:identity-manager:ontransfer')
-const https = require('https')
-const queue = require('bull')
+const Queue = require('bull')
 const pkg = require('../package')
 
-let transferQueue = new queue('Ara Transfer')
+const transferQueue = new Queue('Ara Transfer')
 
 const {
   serverValues,
@@ -14,7 +12,6 @@ const {
 } = require('../config')
 
 const {
-  TRANSFER_TIMEOUT,
   DEFAULT_TOKEN_COUNT,
   MAX_TOKEN_PER_ACCOUNT
 } = serverValues
@@ -26,7 +23,6 @@ const {
  */
 
 async function ontransfer(req, res) {
-
   const now = new Date()
 
   try {
@@ -39,10 +35,11 @@ async function ontransfer(req, res) {
     const tokens = req.body.tokens || DEFAULT_TOKEN_COUNT
     const balance = await token.balanceOf(req.params.did)
 
+    const newBalance = parseInt(balance, 10) + parseInt(tokens, 10)
     // Check Balance before processing Transfer request
-    if ((parseInt(balance, 10) + parseInt(tokens, 10)) > MAX_TOKEN_PER_ACCOUNT) {
+    if (newBalance > MAX_TOKEN_PER_ACCOUNT) {
       res.status(status.badRequest)
-      res.end(`Cannot complete transfer request. Only ${MAX_TOKEN_PER_ACCOUNT} allowed per user`)
+      res.end(`Request failed. Only ${MAX_TOKEN_PER_ACCOUNT} allowed per user`)
     } else {
       try {
         transferQueue.add({
@@ -57,7 +54,6 @@ async function ontransfer(req, res) {
           did: recipient,
           tokens_requested: tokens
         }))
-
       } catch (err) {
         debug(err)
         res

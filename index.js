@@ -15,7 +15,7 @@ const pkg = require('./package')
 const rc = require('./config/rc')()
 
 process.on('uncaughtException', (err) => {
-  console.error(err.stack || err)
+  debug(err.stack || err)
 })
 
 const {
@@ -105,7 +105,7 @@ async function configure(opts, program) {
         alias: 'p',
         describe: 'Port for network node to listen on.',
         type: 'number',
-        default : 5123
+        default: 5123
       })
       // eslint-disable-next-line prefer-destructuring
     argv = program.argv
@@ -173,7 +173,7 @@ async function start() {
 
   // Check for Environment Variables
   if (!process.env.DID && !process.env.pwd) {
-    error('Missing Environment Variables for Master Ara Account')
+    debug('Missing Environment Variables for Master Ara Account')
     return false
   }
 

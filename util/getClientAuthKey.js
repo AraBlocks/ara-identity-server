@@ -1,16 +1,8 @@
-const { unpack, keyRing, derive } = require('ara-network/keys')
-const { readFile } = require('fs')
-const { resolve } = require('path')
+const { keyRing, unpack } = require('ara-network/keys')
 const { error } = require('ara-console')
 const isBuffer = require('is-buffer')
-const { DID } = require('did-uri')
-const crypto = require('ara-crypto')
 const debug = require('debug')('ara:network:node:identity-manager:util')
-const pify = require('pify')
-const ss = require('ara-secret-storage')
-const rc = require('../config/rc')()
 
-const DID_IDENTIFIER_LENGTH = 64
 /**
  * Returns an Authentication key derived from the public keyring file
  * @param  {object} opts

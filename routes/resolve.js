@@ -1,14 +1,8 @@
 const { parse: parseDID } = require('did-uri')
 const { info } = require('ara-console')
-const { readFile } = require('fs')
-const { resolve } = require('path')
-const { DID } = require('did-uri')
-const crypto = require('ara-crypto')
 const debug = require('debug')('ara:network:node:identity-manager:onresolve')
-const pify = require('pify')
 const aid = require('ara-identity')
 const pkg = require('../package')
-const rc = require('../config/rc')()
 
 const {
   serverValues,
@@ -28,7 +22,7 @@ const {
 
 async function onresolve(req, res) {
   const now = Date.now()
-  const araPath = rc.network.identity.root
+
   const timer = setTimeout(() => {
     res
       .status(status.requestTimeout)
