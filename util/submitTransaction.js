@@ -81,17 +81,25 @@ transferQueue.process(job => new Promise(async (resolve, reject) => {
     }
 
     // eslint-disable-next-line no-inner-declarations
-    function ontimeout() {
-      info('Transfer Request timed out....Submitting on a higher Gas Price')
-      token.transfer({
-        did,
-        password,
-        to,
-        val,
-        gasPrice: fast / 10,
-        onhash,
-        onmined
-      })
+    async function ontimeout() {
+
+      info('Transfer Request timed out, Checking previous transaction status....')
+      const { status } = await web3.tx.getTransactionReceipt(txHash)
+
+      if (status) {
+        resolve()
+      } else {
+        info('Submitting replacement transaction on a higher Gas Price')
+        token.transfer({
+          did,
+          password,
+          to,
+          val,
+          gasPrice: fast / 10,
+          onhash,
+          onmined
+        })
+      }
     }
     // Submit Transfer Request to Blockchain
     token.transfer({
