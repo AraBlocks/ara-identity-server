@@ -3,7 +3,7 @@
 
 > **Important**: `mount.sh` must be removed from git history before making this repo public.
 
-[![Build Status](https://travis-ci.com/AraBlocks/ara-network-node-identity-manager.svg?token=6WjTyCg41y8MBmCzro5x&branch=master)](https://travis-ci.com/AraBlocks/ara-network-node-identity-manager)
+[![Build Status](https://travis-ci.com/AraBlocks/ara-identity-server.svg?token=6WjTyCg41y8MBmCzro5x&branch=master)](https://travis-ci.com/AraBlocks/ara-network-node-identity-manager)
 
 A cryptographic key management system which exposes a http api to create Ara identities.
 
