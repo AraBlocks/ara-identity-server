@@ -82,7 +82,6 @@ transferQueue.process(job => new Promise(async (resolve, reject) => {
 
     // eslint-disable-next-line no-inner-declarations
     async function ontimeout() {
-
       info('Transfer Request timed out, Checking previous transaction status....')
       const { status } = await web3.tx.getTransactionReceipt(txHash)
 
