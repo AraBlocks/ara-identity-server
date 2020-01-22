@@ -27,7 +27,7 @@ const transferQueue = new Queue('Ara Transfer')
 
 transferQueue.process(job => new Promise(async (resolve, reject) => {
   try {
-    const { to, val } = job.data
+    const { to, val, m_id, ma_id } = job.data
 
     const { average, fast } = await getGasPrice()
     info('Current Average Gas Price : ', average)
@@ -63,14 +63,13 @@ transferQueue.process(job => new Promise(async (resolve, reject) => {
 
       // Update Balance to Rails Backend
       await request
-        .post(`${basePath}/ara_identities/callback`)
-        .send({ did: to, balance })
+        .post(`${basePath}/missions/${m_id}/mission_accomplishments/${ma_id}/callback`)
         .set('X-Apikey', apiKey)
         .set('X-AppToken', appToken)
         .set('Accept', 'application/json')
         .then((res) => {
           if (200 === res.status) {
-            info(`Balance Updated in Rails Backend for ${to}`)
+            info(`Mission accomplishments updated successfully for ${m_id} & ${ma_id}`)
           }
         })
         .catch((err) => {
