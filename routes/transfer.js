@@ -12,7 +12,6 @@ const {
 } = require('../config')
 
 const {
-  DEFAULT_TOKEN_COUNT,
   MAX_TOKEN_PER_ACCOUNT
 } = serverValues
 
@@ -36,7 +35,14 @@ async function ontransfer(req, res) {
         .end()
     }
 
-    if (undefined === req.query.mission_id || undefined === req.query.mission_accomplishment_id) {
+    if (undefined === req.query.mission_id) {
+      res
+        .status(status.badRequest)
+        .send('Missing mission ID information in request.\n')
+        .end()
+    }
+
+    if (undefined === req.query.mission_accomplishment_id) {
       res
         .status(status.badRequest)
         .send('Missing mission ID information in request.\n')
@@ -45,7 +51,7 @@ async function ontransfer(req, res) {
 
     info('%s: Transfer request for', pkg.name, req.params.did)
     const recipient = req.params.did
-    const tokens = parseInt(req.query.points)
+    const tokens = parseInt(req.query.points, 10)
     const balance = await token.balanceOf(req.params.did)
 
     const newBalance = parseInt(balance, 10) + parseInt(tokens, 10)
@@ -58,8 +64,8 @@ async function ontransfer(req, res) {
         transferQueue.add({
           to: req.params.did,
           val: tokens,
-          m_id: req.query.mission_id,
-          ma_id: req.query.mission_accomplishment_id
+          missionId: req.query.mission_id,
+          accomplishmentId: req.query.mission_accomplishment_id
         })
         info('%s: Transfer request submitted successfully.', pkg.name)
         res.status(status.ok)
