@@ -1,3 +1,12 @@
+## [1.0.5](https://github.com/AraBlocks/ara-identity-server/compare/1.0.4...1.0.5) (2020-01-22)
+
+
+### Bug Fixes
+
+* Fix Linting Errors ([be4a6c9](https://github.com/AraBlocks/ara-identity-server/commit/be4a6c9a0876aefa592eb0ec49f4bbe4521f5fe4))
+
+
+
 ## [1.0.4](https://github.com/AraBlocks/ara-identity-server/compare/0.1.0...1.0.4) (2020-01-22)
 
 
