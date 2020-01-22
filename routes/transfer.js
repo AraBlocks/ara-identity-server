@@ -29,10 +29,23 @@ async function ontransfer(req, res) {
     if (0 !== req.params.did.indexOf('did:ara:')) {
       req.params.did = `did:ara:${req.params.did}`
     }
+    if (undefined === req.query.points) {
+      res
+        .status(status.badRequest)
+        .send('Missing/Invalid points requested.\n')
+        .end()
+    }
+
+    if (undefined === req.query.mission_id || undefined === req.query.mission_accomplishment_id) {
+      res
+        .status(status.badRequest)
+        .send('Missing mission ID information in request.\n')
+        .end()
+    }
 
     info('%s: Transfer request for', pkg.name, req.params.did)
     const recipient = req.params.did
-    const tokens = req.body.tokens || DEFAULT_TOKEN_COUNT
+    const tokens = parseInt(req.query.points)
     const balance = await token.balanceOf(req.params.did)
 
     const newBalance = parseInt(balance, 10) + parseInt(tokens, 10)
@@ -44,7 +57,9 @@ async function ontransfer(req, res) {
       try {
         transferQueue.add({
           to: req.params.did,
-          val: tokens
+          val: tokens,
+          m_id: req.query.mission_id,
+          ma_id: req.query.mission_accomplishment_id
         })
         info('%s: Transfer request submitted successfully.', pkg.name)
         res.status(status.ok)
